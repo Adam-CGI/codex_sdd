@@ -116,7 +116,7 @@ export async function readTask(taskPath: string): Promise<TaskDocument> {
 
   let hasFrontmatter = parsed.matter !== undefined && parsed.matter.trim().length > 0;
   let frontmatterMeta = hasFrontmatter
-    ? parseFrontmatterStrict(parsed.matter, taskIdFromPath)
+    ? parseFrontmatterBlock(parsed.matter, taskIdFromPath)
     : ((parsed.data ?? {}) as Record<string, unknown>);
   let bodyContent = parsed.content;
 
@@ -127,7 +127,7 @@ export async function readTask(taskPath: string): Promise<TaskDocument> {
       throw Errors.taskParseError(taskIdFromPath, 'Frontmatter is not closed with ---');
     }
     const block = match[0];
-    frontmatterMeta = parseFrontmatterStrict(block, taskIdFromPath);
+    frontmatterMeta = parseFrontmatterBlock(block, taskIdFromPath);
     bodyContent = fileContent.slice(block.length);
     hasFrontmatter = true;
   }
@@ -235,7 +235,7 @@ function extractInlineMetadata(
   return { meta: parsedInline, body: remainder };
 }
 
-function parseFrontmatterStrict(matterBlock: string, taskId: string): Record<string, unknown> {
+function parseFrontmatterBlock(matterBlock: string, taskId: string): Record<string, unknown> {
   const withoutDelimiters = matterBlock
     .replace(/^---\s*\n?/, '')
     .replace(/\n---\s*$/, '')
