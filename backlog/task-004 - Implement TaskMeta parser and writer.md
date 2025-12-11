@@ -5,7 +5,7 @@ status: Done
 assignee: human:adam
 priority: medium
 created: 2025-12-11T09:00:00Z
-updated: 2025-12-11T14:55:27Z
+updated: 2025-12-11T14:58:21Z
 schema_version: "3.0"
 ---
 # Implement TaskMeta parser and writer
