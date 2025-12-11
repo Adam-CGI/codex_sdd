@@ -9,6 +9,9 @@ import { planningCreateSpec } from './planning/create-spec.js';
 import { planningBreakdownSpec } from './planning/breakdown-spec.js';
 import { planningRebuildIndex } from './planning/rebuild-index.js';
 import { tasksUpdate } from './tasks/update.js';
+import { codingStartTask } from './coding/start-task.js';
+import { codingSuggestNextStep } from './coding/suggest-next-step.js';
+import { codingUpdateTaskStatus } from './coding/update-task-status.js';
 
 // Tool registry - will be populated as tools are implemented
 const toolRegistry = new Map<string, unknown>();
@@ -49,6 +52,9 @@ toolRegistry.set(planningCreateSpec.name, planningCreateSpec.handler);
 toolRegistry.set(planningBreakdownSpec.name, planningBreakdownSpec.handler);
 toolRegistry.set(planningRebuildIndex.name, planningRebuildIndex.handler);
 toolRegistry.set(tasksUpdate.name, tasksUpdate.handler);
+toolRegistry.set(codingStartTask.name, codingStartTask.handler);
+toolRegistry.set(codingSuggestNextStep.name, codingSuggestNextStep.handler);
+toolRegistry.set(codingUpdateTaskStatus.name, codingUpdateTaskStatus.handler);
 
 export function getRegisteredTools(): string[] {
   return Array.from(toolRegistry.keys());

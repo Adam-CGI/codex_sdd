@@ -1,0 +1,22 @@
+layers:
+  - name: ui
+    path: src/ui
+  - name: domain
+    path: src/domain
+  - name: infra
+    path: src/infra
+
+rules:
+  - "ui may depend on domain"
+  - "domain may not depend on ui"
+  - "infra may depend on domain"
+  - "infra may not depend on ui"
+
+patterns:
+  prohibited:
+    - pattern: "raw SQL in controllers"
+      regex: "(SELECT|INSERT|UPDATE|DELETE)\s+.*\s+FROM"
+      paths: ["src/ui/**", "src/api/**"]
+    - pattern: "HTTP calls in React components"
+      regex: "fetch\(|axios\."
+      paths: ["src/ui/**/*.tsx"]

@@ -1,0 +1,29 @@
+schema_version: "3.0"
+
+statuses:
+  - Backlog
+  - Ready
+  - In Progress
+  - In Review
+  - Done
+
+in_progress_statuses:
+  - In Progress
+
+columns:
+  Backlog: Backlog
+  Ready: Ready
+  InProgress: In Progress
+  InReview: In Review
+  Done: Done
+
+transitions:
+  Backlog: ["Ready"]
+  Ready: ["Backlog", "In Progress"]
+  "In Progress": ["Backlog", "In Review"]
+  "In Review": ["In Progress", "Done"]
+  Done: ["Backlog"]
+
+roles:
+  maintainers:
+    - human:adam
