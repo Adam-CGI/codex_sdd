@@ -13,6 +13,7 @@ import { archValidateSpec, archAnnotateSpecAndTasks } from './arch/rules-store.j
 import { codingStartTask } from './coding/start-task.js';
 import { codingSuggestNextStep } from './coding/suggest-next-step.js';
 import { codingUpdateTaskStatus } from './coding/update-task-status.js';
+import { logger, initRateLimiter, metrics } from './observability/index.js';
 
 // Tool registry - will be populated as tools are implemented
 const toolRegistry = new Map<string, unknown>();
@@ -73,8 +74,27 @@ export function getTool(name: string): unknown {
 
 // Main entry point - will start MCP stdio server when fully implemented
 async function main(): Promise<void> {
-  console.log('MCP Kanban Server starting...');
-  console.log(`Registered tools: ${getRegisteredTools().length}`);
+  // Initialize observability
+  initRateLimiter();
+
+  logger.info('MCP Kanban Server starting...');
+  logger.info({ toolCount: getRegisteredTools().length }, `Registered tools: ${getRegisteredTools().length}`);
+
+  // Log metrics summary on shutdown
+  process.on('SIGINT', () => {
+    logger.info('Shutting down...');
+    metrics.logSummary();
+    process.exit(0);
+  });
+
+  process.on('SIGTERM', () => {
+    logger.info('Shutting down...');
+    metrics.logSummary();
+    process.exit(0);
+  });
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Fatal error');
+  process.exit(1);
+});
