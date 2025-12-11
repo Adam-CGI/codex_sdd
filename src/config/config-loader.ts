@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
-import { FSWatcher, watch } from 'node:fs';
+import { watch } from 'node:fs';
+import type { FSWatcher } from 'node:fs';
 import path from 'node:path';
 import YAML from 'yaml';
 import {

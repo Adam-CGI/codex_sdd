@@ -72,7 +72,7 @@ export interface UpdateTaskStatusResult {
 async function enforceGate(
   task: TaskDocument,
   baseDir: string,
-  callerId?: string,
+  _callerId?: string,
 ): Promise<void> {
   const { config } = await loadConfig(baseDir);
   const inProgressSet = new Set(config.in_progress_statuses ?? []);
@@ -81,7 +81,6 @@ async function enforceGate(
     throw Errors.gateViolation(
       task.meta.id,
       task.meta.status ?? 'undefined',
-      Array.from(inProgressSet),
     );
   }
 }
@@ -281,7 +280,7 @@ function extractRelevantFiles(task: TaskDocument): string[] {
   return [...new Set(files)]; // Remove duplicates
 }
 
-function generateNextStep(task: TaskDocument, diffContext?: string): {
+function generateNextStep(task: TaskDocument, _diffContext?: string): {
   description: string;
   estimated_complexity: 'small' | 'medium' | 'large';
   expected_files: string[];

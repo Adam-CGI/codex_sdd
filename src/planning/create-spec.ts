@@ -71,6 +71,7 @@ export async function createSpec(
         'Architecture Notes',
         'Open Questions',
       ],
+      rawBody: '',
     },
     { appendChangelog: 'Spec created' },
   );
