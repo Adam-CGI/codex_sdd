@@ -5,6 +5,8 @@
  */
 
 import { tasksMove } from './tasks/move.js';
+import { planningCreateSpec } from './planning/create-spec.js';
+import { tasksUpdate } from './tasks/update.js';
 
 // Tool registry - will be populated as tools are implemented
 const toolRegistry = new Map<string, unknown>();
@@ -41,6 +43,8 @@ for (const tool of tools) {
 
 // Register implemented tools
 toolRegistry.set(tasksMove.name, tasksMove.handler);
+toolRegistry.set(planningCreateSpec.name, planningCreateSpec.handler);
+toolRegistry.set(tasksUpdate.name, tasksUpdate.handler);
 
 export function getRegisteredTools(): string[] {
   return Array.from(toolRegistry.keys());
