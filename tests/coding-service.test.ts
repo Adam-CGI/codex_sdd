@@ -106,7 +106,7 @@ Create REST API endpoint for user login.
         'utf8',
       );
 
-      const result = await startTask('task-001', { baseDir: tmpDir });
+      const result = await startTask('task-001', { baseDir: tmpDir, callerId: 'user:alice' });
 
       expect(result.task.meta.id).toBe('task-001');
       expect(result.task.meta.status).toBe('In Progress');
@@ -118,6 +118,34 @@ Create REST API endpoint for user login.
       expect(result.reviews).toEqual([]);
       expect(result.relevant_files).toContain('src/auth/login.ts');
       expect(result.relevant_files).toContain('src/auth/register.ts');
+    });
+
+    it('should reject when caller is not assignee or maintainer', async () => {
+      const spec = `---
+id: feature-restricted
+schema_version: "3.0"
+---
+# Restricted Feature
+`;
+      await fs.writeFile(path.join(tmpDir, 'specs', 'feature-restricted.md'), spec, 'utf8');
+
+      const task = `---
+id: task-unauth
+version: 1
+status: In Progress
+spec: feature-restricted
+assignee: human:bob
+schema_version: "3.0"
+---
+# Task restricted
+`;
+      await fs.writeFile(path.join(tmpDir, 'backlog', 'task-unauth - Task restricted.md'), task, 'utf8');
+
+      await expect(
+        startTask('task-unauth', { baseDir: tmpDir, callerId: 'user:eve' }),
+      ).rejects.toMatchObject({
+        code: ErrorCode.UNAUTHORIZED,
+      });
     });
 
     it('should throw GATE_VIOLATION if task is not in in_progress_statuses', async () => {
@@ -137,7 +165,7 @@ schema_version: "3.0"
         'utf8',
       );
 
-      await expect(startTask('task-002', { baseDir: tmpDir })).rejects.toMatchObject({
+      await expect(startTask('task-002', { baseDir: tmpDir, callerId: 'user:alice' })).rejects.toMatchObject({
         code: ErrorCode.GATE_VIOLATION,
       });
     });
@@ -159,7 +187,7 @@ schema_version: "3.0"
         'utf8',
       );
 
-      await expect(startTask('task-003', { baseDir: tmpDir })).rejects.toMatchObject({
+      await expect(startTask('task-003', { baseDir: tmpDir, callerId: 'user:alice' })).rejects.toMatchObject({
         code: ErrorCode.SPEC_NOT_FOUND,
       });
     });
@@ -180,7 +208,7 @@ schema_version: "3.0"
         'utf8',
       );
 
-      await expect(startTask('task-004', { baseDir: tmpDir })).rejects.toMatchObject({
+      await expect(startTask('task-004', { baseDir: tmpDir, callerId: 'user:alice' })).rejects.toMatchObject({
         code: ErrorCode.SPEC_NOT_FOUND,
       });
     });
@@ -216,7 +244,7 @@ Status: Approved
 `;
       await fs.writeFile(path.join(tmpDir, 'reviews', 'review-task-005.md'), review, 'utf8');
 
-      const result = await startTask('task-005', { baseDir: tmpDir });
+      const result = await startTask('task-005', { baseDir: tmpDir, callerId: 'user:alice' });
 
       expect(result.reviews).toHaveLength(1);
       expect(result.reviews[0].path).toContain('review-task-005.md');
@@ -245,7 +273,7 @@ schema_version: "3.0"
         'utf8',
       );
 
-      const result = await suggestNextStep('task-101', undefined, { baseDir: tmpDir });
+      const result = await suggestNextStep('task-101', undefined, { baseDir: tmpDir, callerId: 'user:alice' });
 
       expect(result.step.description).toBe('Second item pending');
       expect(result.step.estimated_complexity).toBeDefined();
@@ -271,7 +299,7 @@ schema_version: "3.0"
         'utf8',
       );
 
-      const result = await suggestNextStep('task-102', undefined, { baseDir: tmpDir });
+      const result = await suggestNextStep('task-102', undefined, { baseDir: tmpDir, callerId: 'user:alice' });
 
       expect(result.step.estimated_complexity).toBe('small');
     });
@@ -292,7 +320,7 @@ schema_version: "3.0"
       );
 
       await expect(
-        suggestNextStep('task-103', undefined, { baseDir: tmpDir }),
+        suggestNextStep('task-103', undefined, { baseDir: tmpDir, callerId: 'user:alice' }),
       ).rejects.toMatchObject({
         code: ErrorCode.GATE_VIOLATION,
       });
@@ -322,7 +350,7 @@ schema_version: "3.0"
           version: 1,
           status: 'In Review',
         },
-        { baseDir: tmpDir },
+        { baseDir: tmpDir, callerId: 'user:alice' },
       );
 
       expect(result.success).toBe(true);
@@ -354,7 +382,7 @@ schema_version: "3.0"
             version: 1,
             status: 'Done',
           },
-          { baseDir: tmpDir },
+          { baseDir: tmpDir, callerId: 'user:alice' },
         ),
       ).rejects.toMatchObject({
         code: ErrorCode.INVALID_TRANSITION,
@@ -383,7 +411,7 @@ schema_version: "3.0"
             version: 3, // Wrong version
             status: 'In Review',
           },
-          { baseDir: tmpDir },
+          { baseDir: tmpDir, callerId: 'user:alice' },
         ),
       ).rejects.toMatchObject({
         code: ErrorCode.CONFLICT_DETECTED,

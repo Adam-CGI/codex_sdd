@@ -10,6 +10,15 @@ let tmpDir: string;
 
 beforeEach(async () => {
   tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tasks-update-'));
+  const backlogDir = path.join(tmpDir, 'backlog');
+  await fs.mkdir(backlogDir, { recursive: true });
+  const config = `schema_version: "3.0"
+statuses: [Backlog, "In Progress", Done]
+in_progress_statuses: ["In Progress"]
+roles:
+  maintainers: [human:alice]
+`;
+  await fs.writeFile(path.join(backlogDir, 'config.yaml'), config, 'utf8');
 });
 
 afterEach(async () => {
@@ -49,7 +58,7 @@ describe('updateTask', () => {
         meta: { status: 'In Progress', assignee: 'human:alice' },
         sections: { Notes: 'new section body' },
       },
-      { baseDir: tmpDir },
+      { baseDir: tmpDir, callerId: 'human:alice' },
     );
 
     expect(result.success).toBe(true);
@@ -68,13 +77,19 @@ describe('updateTask', () => {
     await writeTaskFile('task-401');
 
     await expect(
-      updateTask({ taskId: 'task-401', version: 99, meta: { status: 'Done' } }, { baseDir: tmpDir }),
+      updateTask(
+        { taskId: 'task-401', version: 99, meta: { status: 'Done' } },
+        { baseDir: tmpDir, callerId: 'human:alice' },
+      ),
     ).rejects.toHaveProperty('code', ErrorCode.CONFLICT_DETECTED);
   });
 
   it('throws TASK_NOT_FOUND when task missing', async () => {
     await expect(
-      updateTask({ taskId: 'task-999', version: 1, meta: { status: 'Done' } }, { baseDir: tmpDir }),
+      updateTask(
+        { taskId: 'task-999', version: 1, meta: { status: 'Done' } },
+        { baseDir: tmpDir, callerId: 'human:alice' },
+      ),
     ).rejects.toHaveProperty('code', ErrorCode.TASK_NOT_FOUND);
   });
 
@@ -83,7 +98,10 @@ describe('updateTask', () => {
     await fs.writeFile(`${filePath}.lock`, 'locked', 'utf8');
 
     await expect(
-      updateTask({ taskId: 'task-402', version: 1, sections: { Notes: 'blocked' } }, { baseDir: tmpDir }),
+      updateTask(
+        { taskId: 'task-402', version: 1, sections: { Notes: 'blocked' } },
+        { baseDir: tmpDir, callerId: 'human:alice' },
+      ),
     ).rejects.toHaveProperty('code', ErrorCode.TASK_LOCKED);
   });
 });

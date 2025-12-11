@@ -3,12 +3,13 @@ import { startTask } from './coding-service.js';
 
 interface StartTaskParams {
   task_id: string;
+  caller_id?: string;
 }
 
 export const codingStartTask = {
   name: 'coding.start_task',
   handler: async (params: StartTaskParams) =>
     wrapWithErrorHandling(() =>
-      startTask(params.task_id, {}),
+      startTask(params.task_id, { callerId: params.caller_id }),
     ),
 };

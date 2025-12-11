@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import { Errors } from '../shared/errors.js';
+import { loadConfig } from '../config/config-loader.js';
 import { getTaskById, resolveTaskPath, writeTask, type TaskDocument, type TaskMeta } from './task-store.js';
 
 export interface UpdateTaskParams {
@@ -11,6 +12,8 @@ export interface UpdateTaskParams {
 
 export interface UpdateTaskOptions {
   baseDir?: string;
+  callerId?: string;
+  caller?: import('../auth/authz.js').Caller;
 }
 
 export interface UpdateTaskResult {
@@ -37,6 +40,9 @@ export async function updateTask(
 
   try {
     const task = await getTaskById(params.taskId, { baseDir });
+    const { config } = await loadConfig(baseDir);
+    const { assertTaskMutationAllowed, audit } = await import('../auth/authz.js');
+    assertTaskMutationAllowed(task, config, options, 'tasks.update');
 
     if (task.meta.version !== params.version) {
       throw Errors.conflictDetected(task.meta.id, params.version, task.meta.version);
@@ -60,6 +66,12 @@ export async function updateTask(
     };
 
     await writeTask(updatedDoc, { expectedVersion: params.version });
+
+    await audit(
+      'tasks.update',
+      { taskId: params.taskId, metaUpdated: Boolean(params.meta), sectionsUpdated: Boolean(params.sections) },
+      { ...options, baseDir },
+    );
 
     return { success: true, meta: updatedMeta };
   } finally {

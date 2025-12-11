@@ -1,11 +1,11 @@
 ---
 id: task-017
-version: 1
-status: Backlog
+version: 2
+status: Done
 assignee: agent:codex
 priority: medium
 created: 2025-12-11T10:15:00Z
-updated: 2025-12-11T10:15:00Z
+updated: 2025-12-11T15:50:22Z
 schema_version: "3.0"
 ---
 # Implement auth gate and audit logging
@@ -14,10 +14,10 @@ schema_version: "3.0"
 Implement Caller-based authorization and Kanban gate checks, plus append-only audit log `/backlog/.audit.jsonl` for mutating operations.
 
 ## Acceptance Criteria
-- [ ] `auth/authz.ts` enforces: maintainer/assignee rights, coding.* gate on in_progress_statuses, planning.update_spec maintainers only.
-- [ ] Gate violations return GATE_VIOLATION with current status in details.
-- [ ] Audit log appends JSONL entries (timestamp, caller, operation, context) for mutating tools; file is created if missing.
-- [ ] Unit tests cover allowed/denied combinations and audit append.
+- [x] `auth/authz.ts` enforces: maintainer/assignee rights, coding.* gate on in_progress_statuses, planning.update_spec maintainers only.
+- [x] Gate violations return GATE_VIOLATION with current status in details.
+- [x] Audit log appends JSONL entries (timestamp, caller, operation, context) for mutating tools; file is created if missing.
+- [x] Unit tests cover allowed/denied combinations and audit append.
 
 ## Implementation Notes
 - Caller shape: `{ type: "human"|"agent", id: string, roles?: string[] }` provided by MCP host.

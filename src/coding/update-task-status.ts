@@ -6,6 +6,7 @@ interface UpdateTaskStatusParams {
   version: number;
   status: string;
   notes?: string;
+  caller_id?: string;
 }
 
 export const codingUpdateTaskStatus = {
@@ -19,7 +20,7 @@ export const codingUpdateTaskStatus = {
           status: params.status,
           notes: params.notes,
         },
-        {},
+        { callerId: params.caller_id },
       ),
     ),
 };

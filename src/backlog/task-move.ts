@@ -12,6 +12,7 @@ export interface MoveTaskParams {
 export interface MoveTaskOptions {
   baseDir?: string;
   callerId?: string;
+  caller?: import('../auth/authz.js').Caller;
 }
 
 export interface MoveTaskResult {
@@ -40,6 +41,10 @@ export async function moveTask(
 
   const task = await getTaskById(taskId, { baseDir });
   const currentStatus = task.meta.status ?? '';
+
+  // Auth: only maintainer or assignee may move tasks
+  const { assertTaskMutationAllowed, audit } = await import('../auth/authz.js');
+  assertTaskMutationAllowed(task, config, options, 'tasks.move');
 
   if (task.meta.version !== version) {
     throw Errors.conflictDetected(task.meta.id, version, task.meta.version);
@@ -72,6 +77,13 @@ export async function moveTask(
   task.meta.updated = new Date().toISOString();
 
   await writeTask(task, { expectedVersion: version });
+
+  // Audit best-effort
+  await audit(
+    'tasks.move',
+    { taskId, from: currentStatus, to: toStatus },
+    { ...options, baseDir },
+  );
 
   return {
     success: true,

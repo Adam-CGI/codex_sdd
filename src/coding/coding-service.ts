@@ -2,9 +2,9 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { Errors } from '../shared/errors.js';
 import { getTaskById, type TaskDocument, type TaskMeta } from '../backlog/task-store.js';
-import { loadConfig } from '../config/config-loader.js';
 import { readSpec, type SpecDocument } from '../specs/spec-store.js';
 import { moveTask } from '../backlog/task-move.js';
+import { loadConfigForAuth, assertCodingAllowed } from '../auth/authz.js';
 
 export interface StartTaskOptions {
   baseDir?: string;
@@ -67,25 +67,6 @@ export interface UpdateTaskStatusResult {
 }
 
 /**
- * Check if a task is in an allowed "in-progress" state for coding operations.
- */
-async function enforceGate(
-  task: TaskDocument,
-  baseDir: string,
-  _callerId?: string,
-): Promise<void> {
-  const { config } = await loadConfig(baseDir);
-  const inProgressSet = new Set(config.in_progress_statuses ?? []);
-
-  if (!task.meta.status || !inProgressSet.has(task.meta.status)) {
-    throw Errors.gateViolation(
-      task.meta.id,
-      task.meta.status ?? 'undefined',
-    );
-  }
-}
-
-/**
  * Start coding on a task. Returns task details, spec summary, architecture rules,
  * git context, and review documents.
  */
@@ -95,11 +76,12 @@ export async function startTask(
 ): Promise<StartTaskResult> {
   const baseDir = options.baseDir ?? process.cwd();
 
+  const { config } = await loadConfigForAuth(baseDir);
   // Load task
   const task = await getTaskById(taskId, { baseDir });
 
-  // Enforce gate: task must be in "in_progress_statuses"
-  await enforceGate(task, baseDir, options.callerId);
+  // Enforce auth + gate: caller must be assignee/maintainer and task in in_progress_statuses
+  assertCodingAllowed(task, config, options, 'coding.start_task');
 
   // Load spec if referenced
   let spec: StartTaskResult['spec'];
@@ -166,11 +148,12 @@ export async function suggestNextStep(
 ): Promise<SuggestNextStepResult> {
   const baseDir = options.baseDir ?? process.cwd();
 
+  const { config } = await loadConfigForAuth(baseDir);
   // Load task
   const task = await getTaskById(taskId, { baseDir });
 
   // Enforce gate
-  await enforceGate(task, baseDir, options.callerId);
+  assertCodingAllowed(task, config, options, 'coding.suggest_next_step');
 
   // Generate step suggestion based on task sections
   const step = generateNextStep(task, currentDiffContext);

@@ -6,6 +6,7 @@ interface MoveParams {
   version: number;
   to_status: string;
   force?: boolean;
+  caller_id?: string;
 }
 
 export const tasksMove = {
@@ -19,8 +20,7 @@ export const tasksMove = {
           toStatus: params.to_status,
           force: params.force,
         },
-        {},
+        { callerId: params.caller_id },
       ),
     ),
 };
-

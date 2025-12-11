@@ -6,6 +6,7 @@ interface UpdateParams {
   version: number;
   meta?: Record<string, unknown>;
   sections?: Record<string, string>;
+  caller_id?: string;
 }
 
 export const tasksUpdate = {
@@ -19,7 +20,7 @@ export const tasksUpdate = {
           meta: params.meta as any,
           sections: params.sections,
         },
-        {},
+        { callerId: params.caller_id },
       ),
     ),
 };

@@ -51,12 +51,14 @@ statuses: [Backlog, Ready]
 in_progress_statuses: [Ready]
 transitions:
   Backlog: [Ready]
+roles:
+  maintainers: [human:alice]
 `);
     await writeTaskFile('task-100', 'Backlog');
 
     const result = await moveTask(
       { taskId: 'task-100', version: 1, toStatus: 'Ready' },
-      { baseDir: tmpDir },
+      { baseDir: tmpDir, callerId: 'human:alice' },
     );
 
     expect(result.success).toBe(true);
@@ -75,13 +77,15 @@ statuses: [Backlog, Ready, "In Progress"]
 in_progress_statuses: ["In Progress"]
 transitions:
   Backlog: [Ready]
+roles:
+  maintainers: [human:alice]
 `);
     await writeTaskFile('task-101', 'Backlog');
 
     await expect(
       moveTask(
         { taskId: 'task-101', version: 1, toStatus: 'In Progress' },
-        { baseDir: tmpDir },
+        { baseDir: tmpDir, callerId: 'human:alice' },
       ),
     ).rejects.toHaveProperty('code', ErrorCode.INVALID_TRANSITION);
   });
@@ -111,6 +115,8 @@ statuses: [Backlog, "In Progress", Done]
 in_progress_statuses: ["In Progress"]
 transitions:
   Backlog: ["In Progress"]
+roles:
+  maintainers: [human:alice]
 `);
     await writeTaskFile('task-200', 'Backlog', 'depends_on: [task-201]\n');
     await writeTaskFile('task-201', 'Backlog');
@@ -118,7 +124,7 @@ transitions:
     await expect(
       moveTask(
         { taskId: 'task-200', version: 1, toStatus: 'In Progress' },
-        { baseDir: tmpDir },
+        { baseDir: tmpDir, callerId: 'human:alice' },
       ),
     ).rejects.toHaveProperty('code', ErrorCode.DEPENDENCIES_NOT_MET);
   });
@@ -129,13 +135,15 @@ statuses: [Backlog, Ready]
 in_progress_statuses: [Ready]
 transitions:
   Backlog: [Ready]
+roles:
+  maintainers: [human:alice]
 `);
     await writeTaskFile('task-300', 'Backlog');
 
     await expect(
       moveTask(
         { taskId: 'task-300', version: 2, toStatus: 'Ready' },
-        { baseDir: tmpDir },
+        { baseDir: tmpDir, callerId: 'human:alice' },
       ),
     ).rejects.toHaveProperty('code', ErrorCode.CONFLICT_DETECTED);
   });
