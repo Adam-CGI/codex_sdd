@@ -6,6 +6,8 @@
 
 import { tasksMove } from './tasks/move.js';
 import { planningCreateSpec } from './planning/create-spec.js';
+import { planningBreakdownSpec } from './planning/breakdown-spec.js';
+import { planningRebuildIndex } from './planning/rebuild-index.js';
 import { tasksUpdate } from './tasks/update.js';
 
 // Tool registry - will be populated as tools are implemented
@@ -44,6 +46,8 @@ for (const tool of tools) {
 // Register implemented tools
 toolRegistry.set(tasksMove.name, tasksMove.handler);
 toolRegistry.set(planningCreateSpec.name, planningCreateSpec.handler);
+toolRegistry.set(planningBreakdownSpec.name, planningBreakdownSpec.handler);
+toolRegistry.set(planningRebuildIndex.name, planningRebuildIndex.handler);
 toolRegistry.set(tasksUpdate.name, tasksUpdate.handler);
 
 export function getRegisteredTools(): string[] {
