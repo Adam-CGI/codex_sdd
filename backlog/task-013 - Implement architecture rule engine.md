@@ -11,12 +11,12 @@ schema_version: "3.0"
 # Implement architecture rule engine
 
 ## Description
-Build `arch/rules-store.ts` to load `architecture/rules.yaml`, evaluate layer/pattern rules, and expose `arch.validate_spec` + `arch.annotate_spec_and_tasks` tools.
+Build `arch/rules-store.ts` to load `architecture/rules.yaml`, evaluate layer/pattern rules, and expose `arch_validate_spec` + `arch_annotate_spec_and_tasks` tools.
 
 ## Acceptance Criteria
 - [x] Parses layers, rules, and prohibited patterns; returns RULE_PARSE_ERROR on invalid config.
-- [x] `arch.validate_spec` scans spec text for layer references/import hints and reports issues with severity/type per SDD.
-- [x] `arch.annotate_spec_and_tasks` can write or attach report notes (no-op ok if annotation strategy minimal).
+- [x] `arch_validate_spec` scans spec text for layer references/import hints and reports issues with severity/type per SDD.
+- [x] `arch_annotate_spec_and_tasks` can write or attach report notes (no-op ok if annotation strategy minimal).
 - [x] Unit tests cover valid/invalid rules.yaml, violation detection, and spec not found.
 
 ## Implementation Notes

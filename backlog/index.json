@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "schema_version": "3.0",
+  "generated_at": "2025-12-12T16:31:51.883Z",
+  "features": [
+    {
+      "spec_id": "feature-expose-observability-metrics-via-mcp-tool-and-cli",
+      "spec_path": "specs/feature-expose-observability-metrics-via-mcp-tool-and-cli.md",
+      "tasks": [
+        "task-020",
+        "task-021",
+        "task-022",
+        "task-023"
+      ]
+    },
+    {
+      "spec_id": "feature-tool-naming-snake-case",
+      "spec_path": "specs/feature-tool-naming-snake-case.md",
+      "tasks": [
+        "task-019"
+      ]
+    }
+  ],
+  "tasks": {
+    "task-001": {
+      "title": "Bootstrap TypeScript MCP server stack",
+      "status": "Done"
+    },
+    "task-002": {
+      "title": "Implement config loader and defaults",
+      "status": "Done"
+    },
+    "task-003": {
+      "title": "Implement error envelope and error code enum",
+      "status": "Done"
+    },
+    "task-004": {
+      "title": "Implement TaskMeta parser and writer",
+      "status": "Done"
+    },
+    "task-005": {
+      "title": "Implement tasks_get tool",
+      "status": "Done"
+    },
+    "task-006": {
+      "title": "Implement tasks_update with optimistic locking",
+      "status": "Done"
+    },
+    "task-007": {
+      "title": "Implement tasks_move with config-driven transitions",
+      "status": "Done"
+    },
+    "task-008": {
+      "title": "Implement kanban_get_board with pagination",
+      "status": "Done"
+    },
+    "task-009": {
+      "title": "Implement spec loader for specs directory",
+      "status": "Done"
+    },
+    "task-010": {
+      "title": "Implement planning_create_spec tool",
+      "status": "Done"
+    },
+    "task-011": {
+      "title": "Implement planning_breakdown_spec tool",
+      "status": "Done"
+    },
+    "task-012": {
+      "title": "Implement backlog index.json generator",
+      "status": "Done"
+    },
+    "task-013": {
+      "title": "Implement architecture rule engine",
+      "status": "Done"
+    },
+    "task-014": {
+      "title": "Implement coding tools",
+      "status": "Done"
+    },
+    "task-015": {
+      "title": "Implement review tools",
+      "status": "Done"
+    },
+    "task-016": {
+      "title": "Implement git tool wrappers",
+      "status": "Done"
+    },
+    "task-017": {
+      "title": "Implement auth gate and audit logging",
+      "status": "Done"
+    },
+    "task-018": {
+      "title": "Implement logging, observability, and rate limiting",
+      "status": "Done"
+    },
+    "task-019": {
+      "title": "Deliver tool-naming-snake-case",
+      "status": "Ready for Code Review",
+      "spec": "specs/feature-tool-naming-snake-case.md"
+    },
+    "task-020": {
+      "title": "We need operators to inspect in-memory tool metrics (call counts, success/error, avg/p95 duration) and rate limiter bucket status from outside the server.",
+      "status": "Ready for Architecture Review",
+      "spec": "specs/feature-expose-observability-metrics-via-mcp-tool-and-cli.md"
+    },
+    "task-021": {
+      "title": "Provide an MCP tool to fetch metrics safely (stderr logging only), and a CLI command `sdd metrics` that prints a human-readable table.",
+      "status": "In Progress",
+      "spec": "specs/feature-expose-observability-metrics-via-mcp-tool-and-cli.md"
+    },
+    "task-022": {
+      "title": "Include tests and docs.",
+      "status": "Ready for Architecture Review",
+      "spec": "specs/feature-expose-observability-metrics-via-mcp-tool-and-cli.md"
+    },
+    "task-023": {
+      "title": "Avoid interfering with JSON-RPC stdout.",
+      "status": "Ready for Architecture Review",
+      "spec": "specs/feature-expose-observability-metrics-via-mcp-tool-and-cli.md"
+    },
+    "task-024": {
+      "title": "pnpm lint currently fails with 18 errors and 3 warnings across src and tests (unused variables, no-useless-escape in string literals, and any types).",
+      "status": "Ready for Architecture Review",
+      "spec": "feature-repository-hygiene-and-lint-compliance"
+    },
+    "task-025": {
+      "title": "Tests already pass.",
+      "status": "Ready for Architecture Review",
+      "spec": "feature-repository-hygiene-and-lint-compliance"
+    },
+    "task-026": {
+      "title": "We want to: 1) make eslint pass cleanly, 2) add automation so lint runs in CI, 3) audit stray root artifacts like code.html and screen.png and either document or remove them.",
+      "status": "Ready for Architecture Review",
+      "spec": "feature-repository-hygiene-and-lint-compliance"
+    }
+  }
+}

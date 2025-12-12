@@ -2,12 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import {
-  rebuildIndex,
-  readIndex,
-  checkIndexStale,
-  type BacklogIndex,
-} from '../src/planning/rebuild-index.js';
+import { rebuildIndex, readIndex, checkIndexStale } from '../src/planning/rebuild-index.js';
 
 let tmpDir: string;
 
@@ -236,8 +231,7 @@ status: { unclosed
       await writeTask('task-001', 'Task one', 'Backlog', 'specs/feature-a.md');
       await writeTask('task-002', 'Task two', 'Backlog', 'specs/feature-z.md');
 
-      const result = await rebuildIndex(tmpDir);
-
+      await rebuildIndex(tmpDir);
       const index = await readIndex(tmpDir);
       expect(index!.features[0].spec_id).toBe('feature-a');
       expect(index!.features[1].spec_id).toBe('feature-z');

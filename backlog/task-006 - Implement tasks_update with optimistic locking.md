@@ -8,10 +8,10 @@ created: 2025-12-11T09:00:00Z
 updated: 2025-12-11T15:07:00Z
 schema_version: "3.0"
 ---
-# Implement tasks.update with optimistic locking
+# Implement tasks_update with optimistic locking
 
 ## Description
-Implement MCP tool `tasks.update` to apply partial updates to metadata/sections with optimistic version checks and write-through to disk.
+Implement MCP tool `tasks_update` to apply partial updates to metadata/sections with optimistic version checks and write-through to disk.
 
 ## Acceptance Criteria
 - [x] Requires caller-provided version; returns CONFLICT_DETECTED when stale.

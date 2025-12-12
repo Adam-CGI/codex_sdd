@@ -2,8 +2,9 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { readSpec, SpecError, type SpecDocument } from '../specs/spec-store.js';
 import { writeTask, type TaskDocument } from '../backlog/task-store.js';
-import { ErrorCode, Errors, McpError, wrapWithErrorHandling } from '../shared/errors.js';
+import { ErrorCode, Errors, McpError, wrapWithErrorHandling, createErrorEnvelope } from '../shared/errors.js';
 import { rebuildIndex } from './rebuild-index.js';
+import { resolveSpecPath as resolveSpecPathUtil, isSpecPath } from '../shared/spec-utils.js';
 
 export interface BreakdownSpecParams {
   specPath: string;
@@ -67,8 +68,8 @@ export async function breakdownSpec(
       meta: {
         id,
         version: 1,
-        status: 'Backlog',
-        spec: path.relative(baseDir, spec.path),
+        status: 'Ready for Architecture Review',
+        spec: spec.meta.id,  // Store just the spec ID, not full path
         created: timestamp,
         updated: timestamp,
         schema_version: DEFAULT_SCHEMA_VERSION,
@@ -110,15 +111,40 @@ export async function breakdownSpec(
 }
 
 export const planningBreakdownSpec = {
-  name: 'planning.breakdown_spec',
-  handler: async (params: { spec_path: string }) =>
-    wrapWithErrorHandling(() =>
-      breakdownSpec({ specPath: params.spec_path }, { baseDir: process.cwd() }),
-    ),
+  name: 'planning_breakdown_spec',
+  handler: async (params: { spec_path?: string; spec_id?: string }) => {
+    // Accept either spec_path or spec_id parameter
+    const specRef = params.spec_path ?? params.spec_id;
+
+    if (!specRef || typeof specRef !== 'string' || specRef.trim().length === 0) {
+      return createErrorEnvelope(
+        ErrorCode.CONFIG_INVALID,
+        'Missing required parameter: spec_path or spec_id. ' +
+          'Example: { "spec_id": "feature-sample" } or { "spec_path": "specs/feature-sample.md" }',
+        {
+          providedParams: Object.keys(params).filter((k) => params[k as keyof typeof params] !== undefined),
+          examples: ['{ "spec_id": "feature-sample" }', '{ "spec_path": "specs/feature-sample.md" }'],
+        },
+      );
+    }
+
+    return wrapWithErrorHandling(() =>
+      breakdownSpec({ specPath: specRef.trim() }, { baseDir: process.cwd() }),
+    );
+  },
 };
 
+/**
+ * Resolve spec path, handling both bare IDs and full paths.
+ * Uses shared utility for normalization.
+ */
 function resolveSpecPath(specPath: string, baseDir: string): string {
-  return path.isAbsolute(specPath) ? specPath : path.join(baseDir, specPath);
+  // If it looks like a path (contains / or .md), resolve relative to baseDir
+  if (isSpecPath(specPath)) {
+    return path.isAbsolute(specPath) ? specPath : path.join(baseDir, specPath);
+  }
+  // Otherwise treat as bare spec ID and use the utility
+  return resolveSpecPathUtil(specPath, baseDir);
 }
 
 async function loadSpecOrThrow(resolvedPath: string, originalInput: string): Promise<SpecDocument> {

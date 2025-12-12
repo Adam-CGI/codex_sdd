@@ -44,7 +44,7 @@ export async function moveTask(
 
   // Auth: only maintainer or assignee may move tasks
   const { assertTaskMutationAllowed, audit } = await import('../auth/authz.js');
-  assertTaskMutationAllowed(task, config, options, 'tasks.move');
+  assertTaskMutationAllowed(task, config, options, 'tasks_move');
 
   if (task.meta.version !== version) {
     throw Errors.conflictDetected(task.meta.id, version, task.meta.version);
@@ -79,11 +79,7 @@ export async function moveTask(
   await writeTask(task, { expectedVersion: version });
 
   // Audit best-effort
-  await audit(
-    'tasks.move',
-    { taskId, from: currentStatus, to: toStatus },
-    { ...options, baseDir },
-  );
+  await audit('tasks_move', { taskId, from: currentStatus, to: toStatus }, { ...options, baseDir });
 
   return {
     success: true,

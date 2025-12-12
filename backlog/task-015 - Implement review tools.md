@@ -11,12 +11,12 @@ schema_version: "3.0"
 # Implement review tools
 
 ## Description
-Implement `review.analyze_diff`, `review.write_review_doc`, and `review.summarize_task_reviews`, integrating architecture rule checks and storing outputs under `/reviews`.
+Implement `review_analyze_diff`, `review_write_review_doc`, and `review_summarize_task_reviews`, integrating architecture rule checks and storing outputs under `/reviews`.
 
 ## Acceptance Criteria
-- [x] `review.analyze_diff` accepts base_ref/head_ref, produces summary, review_status, blocking/non-blocking lists; flags ARCH_VIOLATION when applicable.
-- [x] `review.write_review_doc` writes markdown review file tied to task_id with content from analyze_diff.
-- [x] `review.summarize_task_reviews` aggregates review status for a task from review files.
+- [x] `review_analyze_diff` accepts base_ref/head_ref, produces summary, review_status, blocking/non-blocking lists; flags ARCH_VIOLATION when applicable.
+- [x] `review_write_review_doc` writes markdown review file tied to task_id with content from analyze_diff.
+- [x] `review_summarize_task_reviews` aggregates review status for a task from review files.
 - [x] Unit tests mock git diffs and cover Changes Requested/Approved paths.
 
 ## Implementation Notes

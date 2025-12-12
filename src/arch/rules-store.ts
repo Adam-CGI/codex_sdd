@@ -2,7 +2,8 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import YAML from 'yaml';
 import { readSpec, SpecError } from '../specs/spec-store.js';
-import { ErrorCode, Errors, McpError, wrapWithErrorHandling } from '../shared/errors.js';
+import { ErrorCode, Errors, McpError, wrapWithErrorHandling, createErrorEnvelope } from '../shared/errors.js';
+import { resolveSpecPath as resolveSpecPathUtil, isSpecPath } from '../shared/spec-utils.js';
 
 export interface Layer {
   name: string;
@@ -223,23 +224,72 @@ export async function annotateSpecAndTasks(
   return { success: true };
 }
 
+/**
+ * Resolve spec reference to an absolute path.
+ * Accepts both bare spec IDs ("feature-sample") and paths ("specs/feature-sample.md").
+ */
+function resolveSpecRef(specRef: string, baseDir: string): string {
+  if (isSpecPath(specRef)) {
+    return path.isAbsolute(specRef) ? specRef : path.join(baseDir, specRef);
+  }
+  return resolveSpecPathUtil(specRef, baseDir);
+}
+
 export const archValidateSpec = {
-  name: 'arch.validate_spec',
-  handler: async (params: { spec_path: string }) =>
-    wrapWithErrorHandling(() =>
-      validateSpec({ specPath: params.spec_path }, { baseDir: process.cwd() }),
-    ),
+  name: 'arch_validate_spec',
+  handler: async (params: { spec_path?: string; spec_id?: string }) => {
+    // Accept either spec_path or spec_id parameter
+    const specRef = params.spec_path ?? params.spec_id;
+
+    if (!specRef || typeof specRef !== 'string' || specRef.trim().length === 0) {
+      return createErrorEnvelope(
+        ErrorCode.CONFIG_INVALID,
+        'Missing required parameter: spec_path or spec_id. ' +
+          'Example: { "spec_id": "feature-sample" } or { "spec_path": "specs/feature-sample.md" }',
+        {
+          providedParams: Object.keys(params).filter((k) => params[k as keyof typeof params] !== undefined),
+          examples: ['{ "spec_id": "feature-sample" }', '{ "spec_path": "specs/feature-sample.md" }'],
+        },
+      );
+    }
+
+    const baseDir = process.cwd();
+    const resolvedPath = resolveSpecRef(specRef.trim(), baseDir);
+
+    return wrapWithErrorHandling(() =>
+      validateSpec({ specPath: resolvedPath }, { baseDir }),
+    );
+  },
 };
 
 export const archAnnotateSpecAndTasks = {
-  name: 'arch.annotate_spec_and_tasks',
-  handler: async (params: { spec_path: string; report: unknown }) =>
-    wrapWithErrorHandling(() =>
+  name: 'arch_annotate_spec_and_tasks',
+  handler: async (params: { spec_path?: string; spec_id?: string; report: unknown }) => {
+    // Accept either spec_path or spec_id parameter
+    const specRef = params.spec_path ?? params.spec_id;
+
+    if (!specRef || typeof specRef !== 'string' || specRef.trim().length === 0) {
+      return createErrorEnvelope(
+        ErrorCode.CONFIG_INVALID,
+        'Missing required parameter: spec_path or spec_id. ' +
+          'Example: { "spec_id": "feature-sample" } or { "spec_path": "specs/feature-sample.md" }',
+        {
+          providedParams: Object.keys(params).filter((k) => params[k as keyof typeof params] !== undefined),
+          examples: ['{ "spec_id": "feature-sample" }', '{ "spec_path": "specs/feature-sample.md" }'],
+        },
+      );
+    }
+
+    const baseDir = process.cwd();
+    const resolvedPath = resolveSpecRef(specRef.trim(), baseDir);
+
+    return wrapWithErrorHandling(() =>
       annotateSpecAndTasks(
-        { specPath: params.spec_path, report: params.report },
-        { baseDir: process.cwd() },
+        { specPath: resolvedPath, report: params.report },
+        { baseDir },
       ),
-    ),
+    );
+  },
 };
 
 function parseLayers(input: unknown): Layer[] {
@@ -376,7 +426,7 @@ function readSpecOrThrow(resolvedPath: string, originalInput: string) {
 
 function extractPathMentions(lines: string[]): PathMention[] {
   const mentions: PathMention[] = [];
-  const pathRegex = /((?:src|app|packages|libs)[/\\][A-Za-z0-9._\-\/\\]+(?:\.[A-Za-z0-9]+)?)/g;
+  const pathRegex = /((?:src|app|packages|libs)[/\\][A-Za-z0-9._/\\-]+(?:\.[A-Za-z0-9]+)?)/g;
 
   lines.forEach((line, idx) => {
     let match: RegExpExecArray | null;

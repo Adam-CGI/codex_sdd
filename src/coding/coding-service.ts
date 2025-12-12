@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { Errors } from '../shared/errors.js';
+import { resolveSpecPath } from '../shared/spec-utils.js';
 import { getTaskById, type TaskDocument, type TaskMeta } from '../backlog/task-store.js';
 import { readSpec, type SpecDocument } from '../specs/spec-store.js';
 import { moveTask } from '../backlog/task-move.js';
@@ -86,7 +87,8 @@ export async function startTask(
   // Load spec if referenced
   let spec: StartTaskResult['spec'];
   if (task.meta.spec) {
-    const specPath = path.join(baseDir, 'specs', `${task.meta.spec}.md`);
+    // Use resolveSpecPath to handle both legacy (specs/feature.md) and new (feature) formats
+    const specPath = resolveSpecPath(task.meta.spec as string, baseDir);
     try {
       const specDoc = await readSpec(specPath);
       spec = {
@@ -217,7 +219,7 @@ async function extractArchitectureNotes(rulesPath: string): Promise<string[]> {
       'Architecture rules found at: ' + rulesPath,
       'Review layering constraints and prohibited patterns before implementing',
     ];
-  } catch (error) {
+  } catch {
     return ['No architecture rules file found'];
   }
 }
@@ -278,7 +280,7 @@ function generateNextStep(task: TaskDocument, _diffContext?: string): {
   let description: string;
   let complexity: 'small' | 'medium' | 'large' = 'medium';
 
-  if (uncompleted.length > 0) {
+  if (uncompleted.length > 0 && uncompleted[0]) {
     description = uncompleted[0].replace(/^[-*]\s*\[\s*\]\s*/, '').trim();
 
     // Estimate complexity based on keywords

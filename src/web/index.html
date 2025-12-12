@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Orchestrator | AI Kanban</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f8f5;
+      --panel: #ffffff;
+      --muted: #f1f0e6;
+      --text: #1c1c0d;
+      --text-sub: #5c5c4f;
+      --primary: #f9f506;
+      --accent: #74c0fc;
+      --success: #6ee7b7;
+      --danger: #f87171;
+      --shadow: 0 15px 50px rgba(0,0,0,0.08);
+      font-family: 'Spline Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    .app { display: grid; grid-template-columns: 230px 1fr; min-height: 100vh; }
+    aside { background: #f7f6ee; border-right: 1px solid #ece9dc; padding: 20px 16px; display: flex; flex-direction: column; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; margin-bottom: 20px; }
+    .brand-dot { width: 12px; height: 12px; border-radius: 50%; background: #ffd43b; box-shadow: 0 0 0 8px rgba(249,245,6,0.2); }
+    nav { display: flex; flex-direction: column; gap: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; color: var(--text-sub); text-decoration: none; transition: background 0.15s, color 0.15s; }
+    .nav-item.active, .nav-item:hover { background: #e8e6d5; color: var(--text); }
+    .spacer { flex: 1; }
+    .nav-footer { padding-top: 16px; border-top: 1px solid #ece9dc; }
+    main { padding: 24px 28px 40px; }
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .proj { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: #e3f9e5; color: #15803d; font-weight: 700; font-size: 12px; }
+    .avatars { display: flex; align-items: center; gap: 8px; }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; background: #ddd; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+    .hero { text-align: center; margin-bottom: 18px; }
+    .hero h1 { font-size: 28px; margin: 0 0 10px; }
+    .idea-bar { max-width: 720px; margin: 0 auto; position: relative; }
+    .idea-input { width: 100%; height: 60px; border: 1px solid transparent; background: #ffffff; border-radius: 50px; box-shadow: var(--shadow); padding: 0 160px 0 54px; font-size: 16px; color: var(--text); outline: none; transition: border 0.15s; }
+    .idea-input:focus { border-color: var(--primary); }
+    .idea-bar .spark { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 20px; }
+    .idea-bar button { position: absolute; right: 6px; top: 6px; bottom: 6px; border: none; border-radius: 50px; background: var(--primary); font-weight: 700; padding: 0 18px; cursor: pointer; color: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; max-width: 860px; margin: 16px auto 26px; }
+    .stat-card { background: #fff; border-radius: 18px; padding: 14px; border: 1px solid #ece9dc; box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px; }
+    .stat-ico { width: 36px; height: 36px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+    .stat-meta { font-size: 12px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-val { font-weight: 800; font-size: 16px; color: var(--text); }
+    .board { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+    .column { background: #f5f3e5; border-radius: 18px; padding: 12px; min-height: 420px; border: 1px solid #ece9dc; box-shadow: inset 0 1px 0 #fff; }
+    .col-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-weight: 700; }
+    .col-head .count { background: #fff; border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--text-sub); border: 1px solid #ece9dc; }
+    .card { background: #fff; border-radius: 16px; padding: 14px; border: 1px solid #ece9dc; box-shadow: var(--shadow); margin-bottom: 10px; cursor: pointer; transition: transform 0.12s, border 0.12s; }
+    .card:hover { transform: translateY(-1px); border-color: #dedac4; }
+    .tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .tag.blue { background: #e7f5ff; color: #1c7ed6; }
+    .tag.green { background: #e6fcf5; color: #2f9e44; }
+    .tag.pink { background: #fff0f6; color: #d6336c; }
+    .tag.gray { background: #f1f3f5; color: #495057; }
+    .card-title { font-weight: 700; margin: 8px 0 6px; }
+    .meta-row { display: flex; flex-wrap: wrap; gap: 8px; color: var(--text-sub); font-size: 12px; align-items: center; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .log { margin-top: 24px; background: #fff; border: 1px solid #ece9dc; border-radius: 18px; padding: 14px; box-shadow: var(--shadow); }
+    .log h3 { margin: 0 0 8px; }
+    .log-entry { border-top: 1px solid #ece9dc; padding: 10px 0; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: baseline; }
+    .log-entry:first-of-type { border-top: none; }
+    .json { background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; white-space: pre-wrap; }
+    .btn-ghost { background: #eee; border: 1px solid #ddd; border-radius: 10px; padding: 6px 10px; cursor: pointer; }
+    @media (max-width: 1040px) { .app { grid-template-columns: 1fr; } aside { position: static; height: auto; flex-direction: row; flex-wrap: wrap; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand"><span class="brand-dot"></span> AI-Kanban</div>
+      <nav>
+        <a class="nav-item active" href="#">🗂️ Board</a>
+        <a class="nav-item" href="#">📥 Backlog</a>
+        <a class="nav-item" href="#">🤖 Agents</a>
+        <a class="nav-item" href="#">📁 Projects</a>
+      </nav>
+      <div class="spacer"></div>
+      <div class="nav-footer"><a class="nav-item" href="#">⚙️ Settings</a></div>
+    </aside>
+    <main>
+      <header>
+        <div class="proj">Project: MCP Workspace <span class="pill"><span class="dot" style="background:#22c55e"></span>Online</span></div>
+        <div class="avatars"><div class="avatar">🤖</div><div class="avatar">🙂</div><div class="avatar" style="background:#eee;color:#444;">+2</div></div>
+      </header>
+
+      <section class="hero">
+        <h1>What feature should we build next?</h1>
+        <div class="idea-bar">
+          <span class="spark">✨</span>
+          <input id="feature_name" class="idea-input" placeholder="e.g. Add dark mode toggle to user settings page" />
+          <button onclick="autoPlan()">Generate Tasks</button>
+        </div>
+      </section>
+
+      <section class="stats" id="stats-row">
+        <div class="stat-card"><span class="stat-ico" style="background:#e6fcf5;">🤖</span><div><div class="stat-meta">Active Agents</div><div class="stat-val" id="stat-agents">-</div></div></div>
+        <div class="stat-card"><span class="stat-ico" style="background:#fff3bf;">🚀</span><div><div class="stat-meta">Git Pushes</div><div class="stat-val" id="stat-pushes">-</div></div></div>
+        <div class="stat-card"><span class="stat-ico" style="background:#ffe8cc;">📝</span><div><div class="stat-meta">Pending Review</div><div class="stat-val" id="stat-review">-</div></div></div>
+        <div class="stat-card"><span class="stat-ico" style="background:#e7f5ff;">📌</span><div><div class="stat-meta">Tasks</div><div class="stat-val" id="stat-total">-</div></div></div>
+      </section>
+
+      <section class="board" id="kanban-board"></section>
+
+      <section class="log">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h3>Activity Log</h3>
+          <button class="btn-ghost" onclick="clearLog()">Clear</button>
+        </div>
+        <div id="log-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      board: null,
+      boardFilters: { page: 1, page_size: 50 },
+      tools: [],
+      log: [],
+      activeTask: null,
+    };
+
+    const columnOrder = ['Backlog', 'To Do', 'To-Do', 'Ready', 'Doing', 'In Progress', 'Review', 'Done', 'Completed'];
+
+    async function init() {
+      await loadTools();
+      await loadBoard();
+    }
+
+    async function loadTools() {
+      try {
+        const res = await fetch('/api/tools/list');
+        const json = await res.json();
+        state.tools = json.tools || [];
+      } catch {}
+    }
+
+    async function loadBoard(showSpinner = false) {
+      const { result, error } = await callTool('kanban.get_board', { ...state.boardFilters }, { log: showSpinner });
+      if (error) {
+        document.getElementById('kanban-board').innerHTML = `<div style="grid-column:1/-1;padding:12px;background:#fee;border:1px solid #fca5a5;border-radius:12px;">${error}</div>`;
+        return;
+      }
+      state.board = result;
+      renderBoard();
+      renderStats();
+    }
+
+    function renderStats() {
+      const total = state.board?.total_tasks ?? 0;
+      const inProgress = (state.board?.tasks || []).filter(t => ['Doing','In Progress','Review'].includes(t.meta?.status || '')).length;
+      const review = (state.board?.tasks || []).filter(t => (t.meta?.status || '').toLowerCase().includes('review')).length;
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-agents').textContent = `${Math.max(1, inProgress)} idle / ${inProgress} working`;
+      document.getElementById('stat-review').textContent = `${review} Items`;
+      document.getElementById('stat-pushes').textContent = `${Math.max(0, total - inProgress)} Today`;
+    }
+
+    function renderBoard() {
+      const container = document.getElementById('kanban-board');
+      const tasks = state.board?.tasks || [];
+      const grouped = new Map();
+      tasks.forEach(t => {
+        const col = t.column || t.meta?.status || 'To-Do';
+        if (!grouped.has(col)) grouped.set(col, []);
+        grouped.get(col).push(t);
+      });
+      const baseCols = ['To-Do', 'In Progress', 'Review', 'Done'];
+      const orderedCols = [...baseCols, ...columnOrder, ...grouped.keys()].filter((v, i, arr) => arr.indexOf(v) === i);
+      container.innerHTML = orderedCols.map(col => renderColumn(col, grouped.get(col) || [])).join('');
+    }
+
+    function renderColumn(name, tasks) {
+      const colors = {
+        'Backlog': '#a5a5a5', 'To Do': '#a5a5a5', 'To-Do': '#a5a5a5', 'Ready': '#22c55e', 'Doing': '#f9f506',
+        'In Progress': '#f9f506', 'Review': '#fb923c', 'Done': '#22c55e', 'Completed': '#22c55e'
+      };
+      const dot = colors[name] || '#a5a5a5';
+      const cards = tasks.map(renderCard).join('');
+      const empty = '<div style="color:#999;font-size:13px; padding:8px;">No tasks here yet</div>';
+      return `<div class="column"><div class="col-head"><span>${name}</span><span class="count">${tasks.length}</span></div>${cards || empty}</div>`;
+    }
+
+    function renderCard(task) {
+      const assignee = task.assignee || task.meta?.assignee;
+      const spec = task.spec || task.meta?.spec;
+      const status = task.meta?.status || task.status;
+      const priority = task.meta?.priority;
+      const title = task.title || task.meta?.title || task.meta?.id;
+      const tagColor = spec ? 'blue' : priority ? 'pink' : 'gray';
+      const tagLabel = spec ? spec : priority ? priority : 'Task';
+      return `<div class="card" onclick='openDrawer(${JSON.stringify(JSON.stringify(task))})'>
+        <span class="tag ${tagColor}">${tagLabel}</span>
+        <div class="card-title">${title}</div>
+        <div class="meta-row">
+          <span class="dot" style="background:${statusColor(status)}"></span>${status || ''}
+          ${assignee ? `<span>• 👤 ${assignee}</span>` : ''}
+          ${task.meta?.version ? `<span>• v${task.meta.version}</span>` : ''}
+        </div>
+      </div>`;
+    }
+
+    function statusColor(s) {
+      if (!s) return '#d1d1d1';
+      const v = s.toLowerCase();
+      if (v.includes('progress') || v.includes('doing')) return '#f9f506';
+      if (v.includes('review')) return '#fb923c';
+      if (v.includes('done')) return '#22c55e';
+      return '#a5a5a5';
+    }
+
+    async function autoPlan() {
+      const feature = document.getElementById('feature_name').value.trim();
+      if (!feature) return alert('Feature name required');
+      const created = await runTool('planning.create_spec', { feature_name: feature });
+      if (created?.result?.spec_path) {
+        await runTool('planning.breakdown_spec', { spec_path: created.result.spec_path });
+        await loadBoard(true);
+      }
+    }
+
+    async function callTool(name, params, opts = { log: true }) {
+      const entry = { id: Date.now(), tool: name, params, status: 'running', started: new Date() };
+      if (opts.log) { state.log.unshift(entry); renderLog(); }
+      try {
+        const res = await fetch(`/api/tools/${name}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params || {})
+        });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message || 'Tool error');
+        entry.status = 'ok'; entry.result = json.result; renderLog();
+        return { result: json.result };
+      } catch (error) {
+        entry.status = 'error'; entry.error = error.message; renderLog();
+        return { error: error.message };
+      }
+    }
+
+    async function runTool(name, params) { return callTool(name, params, { log: true }); }
+
+    function renderLog() {
+      const list = document.getElementById('log-list');
+      if (!state.log.length) { list.innerHTML = '<div style="color:#777;">No activity yet.</div>'; return; }
+      list.innerHTML = state.log.slice(0, 40).map(item => `
+        <div class="log-entry">
+          <div>
+            <div style="font-weight:700;">${item.tool}</div>
+            <div style="color:#777;font-size:12px;">${new Date(item.started).toLocaleTimeString()} · ${item.status}</div>
+            ${item.params ? `<div class="json">${escapeHtml(JSON.stringify(item.params, null, 2))}</div>` : ''}
+            ${item.result ? `<div class="json">${escapeHtml(JSON.stringify(item.result, null, 2))}</div>` : ''}
+            ${item.error ? `<div style="color:#b91c1c;">${escapeHtml(item.error)}</div>` : ''}
+          </div>
+          <span class="tag ${item.status === 'ok' ? 'green' : 'pink'}">${item.status}</span>
+        </div>`).join('');
+    }
+
+    function clearLog() { state.log = []; renderLog(); }
+
+    function openDrawer(taskJson) {
+      // placeholder: could open a modal; for now just highlight and log
+      const task = JSON.parse(taskJson);
+      state.activeTask = task;
+      alert(`Task ${task.id}\nStatus: ${task.meta?.status || ''}`);
+    }
+
+    function escapeHtml(str) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+      return str.replace(/[&<>"']/g, c => map[c] || c);
+    }
+
+    init();
+  </script>
+</body>
+</html>

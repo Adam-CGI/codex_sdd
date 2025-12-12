@@ -8,10 +8,10 @@ created: 2025-12-11T09:00:00Z
 updated: 2025-12-11T14:59:12Z
 schema_version: "3.0"
 ---
-# Implement tasks.move with config-driven transitions
+# Implement tasks_move with config-driven transitions
 
 ## Description
-Implement MCP tool `tasks.move` that enforces config-driven transitions, dependency checks, gate statuses, and optional maintainer `force`.
+Implement MCP tool `tasks_move` that enforces config-driven transitions, dependency checks, gate statuses, and optional maintainer `force`.
 
 ## Acceptance Criteria
 - [x] Validates to_status exists in config.statuses; otherwise TASK_INVALID_STATUS.

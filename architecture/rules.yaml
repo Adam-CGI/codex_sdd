@@ -15,8 +15,8 @@ rules:
 patterns:
   prohibited:
     - pattern: "raw SQL in controllers"
-      regex: "(SELECT|INSERT|UPDATE|DELETE)\s+.*\s+FROM"
+      regex: "(SELECT|INSERT|UPDATE|DELETE)\\s+.*\\s+FROM"
       paths: ["src/ui/**", "src/api/**"]
     - pattern: "HTTP calls in React components"
-      regex: "fetch\(|axios\."
+      regex: "fetch\\(|axios\\."
       paths: ["src/ui/**/*.tsx"]

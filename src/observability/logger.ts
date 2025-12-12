@@ -7,12 +7,22 @@ import pino from 'pino';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
+// Avoid pretty logging when using stdio transport (MCP) to prevent stdout noise
+const stdioOnly = process.env.STDIO_ONLY === 'true';
+
 /**
  * Create the base logger with appropriate transport
  * Uses pino-pretty in development for human-readable output
+ * IMPORTANT: For MCP servers, all logs MUST go to stderr, not stdout
+ * to avoid interfering with the JSON-RPC protocol on stdout
  */
 function createLogger(): pino.Logger {
-  if (isDev) {
+  // Create a destination that writes to stderr
+  const destination = pino.destination({ dest: 2, sync: false }); // fd 2 = stderr
+
+  // Only enable pretty transport when *not* running in stdio-only mode
+  // to keep stdout clean for JSON-RPC traffic.
+  if (isDev && !stdioOnly && process.env.PRETTY_LOGS !== 'false') {
     return pino({
       level: process.env.LOG_LEVEL ?? 'info',
       transport: {
@@ -21,14 +31,16 @@ function createLogger(): pino.Logger {
           colorize: true,
           translateTime: 'SYS:standard',
           ignore: 'pid,hostname',
+          destination: 2, // Write to stderr
         },
       },
-    });
+    }, destination);
   }
 
+  // Default: structured JSON to stderr
   return pino({
     level: process.env.LOG_LEVEL ?? 'info',
-  });
+  }, destination);
 }
 
 export const logger = createLogger();

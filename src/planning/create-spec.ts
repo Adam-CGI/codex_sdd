@@ -88,20 +88,50 @@ export async function createSpec(
 }
 
 export const planningCreateSpec = {
-  name: 'planning.create_spec',
-  handler: async (params: {
-    feature_name: string;
-    requirements_text?: string;
-    requirements_path?: string;
-  }) =>
-    wrapWithErrorHandling(() =>
-      createSpec({
-        featureName: params.feature_name,
-        requirementsText: params.requirements_text,
-        requirementsPath: params.requirements_path,
-      }),
-    ),
+  name: 'planning_create_spec',
+  handler: async (params: unknown) =>
+    wrapWithErrorHandling(() => {
+      const normalized = normalizeParams(params);
+      return createSpec({
+        featureName: normalized.featureName ?? '',
+        requirementsText: normalized.requirementsText,
+        requirementsPath: normalized.requirementsPath,
+      });
+    }),
 };
+
+function normalizeParams(input: unknown): {
+  featureName?: string;
+  requirementsText?: string;
+  requirementsPath?: string;
+} {
+  // Some MCP clients wrap args under "arguments" or change casing; accept both.
+  const raw =
+    input && typeof input === 'object' && 'arguments' in (input as Record<string, unknown>)
+      ? (input as Record<string, unknown>).arguments
+      : input;
+
+  const params = (raw ?? {}) as Record<string, unknown>;
+
+  const featureName =
+    (params.feature_name as string | undefined) ??
+    (params.featureName as string | undefined) ??
+    (params.feature as string | undefined);
+
+  const requirementsText =
+    (params.requirements_text as string | undefined) ??
+    (params.requirementsText as string | undefined);
+
+  const requirementsPath =
+    (params.requirements_path as string | undefined) ??
+    (params.requirementsPath as string | undefined);
+
+  return {
+    featureName: featureName?.trim(),
+    requirementsText: requirementsText?.trim(),
+    requirementsPath: requirementsPath?.trim(),
+  };
+}
 
 function buildSpecId(featureName: string): string {
   const base = slugify(featureName);

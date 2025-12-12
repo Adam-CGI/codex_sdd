@@ -8,10 +8,10 @@ created: 2025-12-11T09:00:00Z
 updated: 2025-12-11T14:48:10Z
 schema_version: "3.0"
 ---
-# Implement tasks.get tool
+# Implement tasks_get tool
 
 ## Description
-Expose MCP tool `tasks.get` that uses task-store to read a task by id, returning parsed meta, sections, and raw path with proper error codes.
+Expose MCP tool `tasks_get` that uses task-store to read a task by id, returning parsed meta, sections, and raw path with proper error codes.
 
 ## Acceptance Criteria
 - [x] Resolves task by filename pattern; returns TASK_NOT_FOUND when missing.

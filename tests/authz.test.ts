@@ -71,7 +71,7 @@ describe('authz + audit', () => {
     const lines = contents.trim().split('\n');
     expect(lines.length).toBeGreaterThanOrEqual(1);
     const entry = JSON.parse(lines[0] as string);
-    expect(entry.operation).toBe('tasks.move');
+    expect(entry.operation).toBe('tasks_move');
     expect(entry.callerId).toBe('human:alice');
     expect(entry.context.to).toBe('Ready');
   });

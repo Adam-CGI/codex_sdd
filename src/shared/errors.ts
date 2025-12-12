@@ -275,4 +275,48 @@ export const Errors = {
       `Caller "${callerId}" is not authorized to perform "${operation}"`,
       { callerId, operation }
     ),
+
+  /**
+   * Enhanced parameter validation errors with context
+   */
+  parameterMissing: (paramName: string, expectedType: string, examples?: string[]) =>
+    new McpError(
+      ErrorCode.CONFIG_INVALID,
+      `Missing required parameter "${paramName}". Expected: ${expectedType}`,
+      {
+        parameter: paramName,
+        expectedType,
+        examples: examples ?? [],
+        hint: `Provide ${paramName} as a ${expectedType}`,
+      }
+    ),
+
+  parameterInvalid: (
+    paramName: string,
+    receivedValue: unknown,
+    expectedFormat: string,
+    examples?: string[]
+  ) =>
+    new McpError(
+      ErrorCode.CONFIG_INVALID,
+      `Invalid value for parameter "${paramName}": expected ${expectedFormat}`,
+      {
+        parameter: paramName,
+        received: typeof receivedValue,
+        receivedValue: receivedValue === undefined ? 'undefined' : String(receivedValue).slice(0, 100),
+        expectedFormat,
+        examples: examples ?? [],
+      }
+    ),
+
+  parameterTypeMismatch: (paramName: string, expected: string, received: string) =>
+    new McpError(
+      ErrorCode.CONFIG_INVALID,
+      `Parameter "${paramName}" has wrong type: expected ${expected}, received ${received}`,
+      {
+        parameter: paramName,
+        expectedType: expected,
+        receivedType: received,
+      }
+    ),
 };

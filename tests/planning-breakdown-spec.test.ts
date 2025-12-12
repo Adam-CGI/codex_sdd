@@ -3,7 +3,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { breakdownSpec } from '../src/planning/breakdown-spec.js';
-import { ErrorCode, McpError } from '../src/shared/errors.js';
+import { ErrorCode } from '../src/shared/errors.js';
 import { readTask } from '../src/backlog/task-store.js';
 
 let tmpDir: string;
@@ -29,7 +29,7 @@ describe('planning.breakdown_spec', () => {
     const specPath = await writeSpecFile(`---
 id: feature-sample
 status: Planned
-schema_version: \"3.0\"
+schema_version: "3.0"
 ---
 # Sample Feature
 
@@ -59,8 +59,8 @@ schema_version: \"3.0\"
     const task1 = await readTask(path.join(tmpDir, 'backlog', 'task-001 - Allow users to reset password.md'));
     const task2 = await readTask(path.join(tmpDir, 'backlog', 'task-002 - Send confirmation email.md'));
 
-    expect(task1.meta.status).toBe('Backlog');
-    expect(task1.meta.spec).toBe('specs/feature-sample.md');
+    expect(task1.meta.status).toBe('Ready for Architecture Review');
+    expect(task1.meta.spec).toBe('feature-sample');  // Normalized to spec ID only
     expect(task1.meta.schema_version).toBe('3.0');
     expect(task1.meta.created).toBe('2025-01-01T00:00:00.000Z');
     expect(task2.meta.id).toBe('task-002');
@@ -76,7 +76,7 @@ schema_version: \"3.0\"
     const specPath = await writeSpecFile(`---
 id: feature-sample
 status: Planned
-schema_version: \"3.0\"
+schema_version: "3.0"
 ---
 # Sample Feature
 
@@ -92,7 +92,7 @@ schema_version: \"3.0\"
 id: task-001
 version: 1
 status: Backlog
-schema_version: \"3.0\"
+schema_version: "3.0"
 ---
 `,
       'utf8',
