@@ -10,7 +10,7 @@ interface UpdateTaskStatusParams {
 }
 
 export const codingUpdateTaskStatus = {
-  name: 'coding.update_task_status',
+  name: 'coding_update_task_status',
   handler: async (params: UpdateTaskStatusParams) =>
     wrapWithErrorHandling(() =>
       updateTaskStatus(

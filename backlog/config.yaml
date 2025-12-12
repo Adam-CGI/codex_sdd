@@ -1,27 +1,36 @@
 schema_version: "3.0"
 
+# Workflow statuses aligned with multi-agent development process
 statuses:
   - Backlog
-  - Ready
+  - Ready for Architecture Review
+  - Needs Planning Update
+  - Ready for Coding
   - In Progress
-  - In Review
+  - Ready for Code Review
   - Done
 
+# Only allow coding tools when task is actively being worked on
 in_progress_statuses:
   - In Progress
 
 columns:
   Backlog: Backlog
-  Ready: Ready
+  ArchReview: Ready for Architecture Review
+  NeedsPlanningUpdate: Needs Planning Update
+  ReadyForCoding: Ready for Coding
   InProgress: In Progress
-  InReview: In Review
+  CodeReview: Ready for Code Review
   Done: Done
 
+# Workflow-aligned transitions enforcing the agent flow
 transitions:
-  Backlog: ["Ready"]
-  Ready: ["Backlog", "In Progress"]
-  "In Progress": ["Backlog", "In Review"]
-  "In Review": ["In Progress", "Done"]
+  Backlog: ["Ready for Architecture Review"]
+  "Ready for Architecture Review": ["Backlog", "Ready for Coding", "Needs Planning Update"]
+  "Needs Planning Update": ["Ready for Architecture Review"]
+  "Ready for Coding": ["In Progress", "Backlog"]
+  "In Progress": ["Ready for Code Review", "Backlog"]
+  "Ready for Code Review": ["In Progress", "Done", "Backlog"]
   Done: ["Backlog"]
 
 roles:

@@ -258,19 +258,19 @@ export async function summarizeTaskReviews(
 
 // Tool exports for MCP registration
 export const reviewAnalyzeDiff = {
-  name: 'review.analyze_diff',
+  name: 'review_analyze_diff',
   handler: async (params: AnalyzeDiffParams) =>
     wrapWithErrorHandling(() => analyzeDiff(params, { baseDir: process.cwd() })),
 };
 
 export const reviewWriteReviewDoc = {
-  name: 'review.write_review_doc',
+  name: 'review_write_review_doc',
   handler: async (params: WriteReviewDocParams) =>
     wrapWithErrorHandling(() => writeReviewDoc(params, { baseDir: process.cwd() })),
 };
 
 export const reviewSummarizeTaskReviews = {
-  name: 'review.summarize_task_reviews',
+  name: 'review_summarize_task_reviews',
   handler: async (params: SummarizeReviewsParams) =>
     wrapWithErrorHandling(() => summarizeTaskReviews(params, { baseDir: process.cwd() })),
 };

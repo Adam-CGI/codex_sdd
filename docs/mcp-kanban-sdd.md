@@ -125,7 +125,7 @@ roles:
 If `config.yaml` is missing: use defaults `statuses=[Backlog, Ready, In Progress, In Review, Done]`, `in_progress_statuses=[In Progress]`, `transitions={}` (all transitions allowed).
 
 ### 4.2 Status Transition Rules
-- If `transitions` defined, `tasks.move` MUST validate `current_status → to_status` is allowed.
+- If `transitions` defined, `tasks_move` MUST validate `current_status → to_status` is allowed.
 - If `transitions` missing, all transitions allowed (backward compatibility).
 - `force: true` MAY bypass invalid transitions for maintainers only.
 
@@ -197,7 +197,7 @@ interface TaskMeta {
 
 #### 5.1.3 Task Dependencies
 - Optional `depends_on: [task-000, task-005]`.
-- `tasks.move` to any status in `in_progress_statuses` SHOULD ensure all dependencies are `Done`; otherwise return `DEPENDENCIES_NOT_MET`. `force: true` allowed for maintainers.
+- `tasks_move` to any status in `in_progress_statuses` SHOULD ensure all dependencies are `Done`; otherwise return `DEPENDENCIES_NOT_MET`. `force: true` allowed for maintainers.
 
 ### 5.2 Specs
 - Files under `/specs`.
@@ -295,41 +295,41 @@ Rule grammar: `<layer> <constraint> <layer>` where constraint ∈ {may depend on
   }
 }
 ```
-Regeneration triggers: `planning.breakdown_spec`, `tasks.update` when `spec` changes, `planning.rebuild_index`. If any task/spec newer than `generated_at`, treat index as stale.
+Regeneration triggers: `planning_breakdown_spec`, `tasks_update` when `spec` changes, `planning_rebuild_index`. If any task/spec newer than `generated_at`, treat index as stale.
 
 ## 6. High-Level System Workflow (System View)
-Feature request → `planning.create_spec` → `/specs/feature-*.md`  
-Spec breakdown → `planning.breakdown_spec` → `/backlog/task-*.md`, update `index.json`  
-Kanban refinement → `kanban.get_board`, `tasks.get/update/move`  
+Feature request → `planning_create_spec` → `/specs/feature-*.md`  
+Spec breakdown → `planning_breakdown_spec` → `/backlog/task-*.md`, update `index.json`  
+Kanban refinement → `kanban_get_board`, `tasks_get/update/move`  
 Gate enforcement → `coding.*` only when task status ∈ `in_progress_statuses`  
-Incremental coding → `coding.start_task`, `coding.suggest_next_step`, `git.*`  
-Review → `review.analyze_diff`, `review.write_review_doc` → `/reviews`  
-Completion → Maintainer moves `In Review → Done`, optionally `planning.update_spec` status.
+Incremental coding → `coding_start_task`, `coding_suggest_next_step`, `git.*`  
+Review → `review_analyze_diff`, `review_write_review_doc` → `/reviews`  
+Completion → Maintainer moves `In Review → Done`, optionally `planning_update_spec` status.
 
 ## 7. Tool Surface Overview (MCP Tools)
 Full schemas in Appendix A; handlers live in `src/*-service.ts`.
-- Kanban/Tasks: `kanban.get_board`, `tasks.get`, `tasks.update`, `tasks.move`, `tasks.search`
-- Planning: `planning.create_spec`, `planning.breakdown_spec`, `planning.update_spec`, `planning.rebuild_index`
-- Architecture: `arch.validate_spec`, `arch.annotate_spec_and_tasks`
-- Coding: `coding.start_task`, `coding.suggest_next_step`, `coding.update_task_status`
-- Review: `review.analyze_diff`, `review.write_review_doc`, `review.summarize_task_reviews`
-- Git: `git.status`, `git.create_branch`, `git.stage_and_commit`, `git.push`, `git.open_pr`
+- Kanban/Tasks: `kanban_get_board`, `tasks_get`, `tasks_update`, `tasks_move`, `tasks_search`
+- Planning: `planning_create_spec`, `planning_breakdown_spec`, `planning_update_spec`, `planning_rebuild_index`
+- Architecture: `arch_validate_spec`, `arch_annotate_spec_and_tasks`
+- Coding: `coding_start_task`, `coding_suggest_next_step`, `coding_update_task_status`
+- Review: `review_analyze_diff`, `review_write_review_doc`, `review_summarize_task_reviews`
+- Git: `git_status`, `git_create_branch`, `git_stage_and_commit`, `git_push`, `git_open_pr`
 
 ## 8. User Workflows (Human + Agent)
 ### 8.1 Workflow A – New Feature to Done
-Requester describes feature → agent `planning.create_spec` → agent `planning.breakdown_spec` → maintainer refines tasks → maintainer moves to Ready → assignee moves to In Progress → agent coding loop (`coding.*`, `git.*`) → agent sets In Review → maintainer `review.*` → maintainer merges PR & `tasks.move` to Done → optional `planning.update_spec` status.
+Requester describes feature → agent `planning_create_spec` → agent `planning_breakdown_spec` → maintainer refines tasks → maintainer moves to Ready → assignee moves to In Progress → agent coding loop (`coding.*`, `git.*`) → agent sets In Review → maintainer `review.*` → maintainer merges PR & `tasks_move` to Done → optional `planning_update_spec` status.
 
 ### 8.2 Workflow B – Human Developer Only
 Same planning/Kanban; human performs coding and git manually or via git tools; still leverages `review.*`.
 
 ### 8.3 Workflow C – Changes Requested
-`review.analyze_diff` returns `Changes Requested` → maintainer moves `In Review → In Progress` → fixes → back to `In Review` → Done.
+`review_analyze_diff` returns `Changes Requested` → maintainer moves `In Review → In Progress` → fixes → back to `In Review` → Done.
 
 ### 8.4 Workflow D – Planning/Kanban Only
 Team uses planning/kanban/tasks/arch/review tools; coding is manual; gate remains policy marker.
 
 ## 9. Git Integration Boundaries
-In scope: `git.status`, `git.create_branch`, `git.stage_and_commit`, `git.push`, `git.open_pr`.  
+In scope: `git_status`, `git_create_branch`, `git_stage_and_commit`, `git_push`, `git_open_pr`.  
 Out of scope: rebases, cherry-picks, submodules, complex merges. Git kept tightly coupled to tasks; alternative “Git MCP server” is possible later.
 
 ## 10. Error Handling & Error Codes
@@ -356,7 +356,7 @@ Out of scope: rebases, cherry-picks, submodules, complex merges. Git kept tightl
 - Single-writer via version check plus best-effort file lock; multiple readers allowed; may emit `TASK_LOCKED` if lock unavailable quickly.
 - Config reload: cache `config.yaml` and watch file changes; briefly block during reload.
 - Git conflicts: detect before git/coding tools; return `MERGE_CONFLICT`; suggest manual resolution or move task to “Blocked”.
-- Missing spec: `coding.start_task` fails with `SPEC_NOT_FOUND`; `tasks.get` returns warning in `details`.
+- Missing spec: `coding_start_task` fails with `SPEC_NOT_FOUND`; `tasks_get` returns warning in `details`.
 
 ## 12. Security & Authorization
 - Caller identity provided by MCP host:
@@ -364,9 +364,9 @@ Out of scope: rebases, cherry-picks, submodules, complex merges. Git kept tightl
 interface Caller { type: "human" | "agent"; id: string; roles?: string[]; }
 ```
 - Authorization rules:
-  - `tasks.move`: assignee or maintainer, obey transitions (unless maintainer+force).
+  - `tasks_move`: assignee or maintainer, obey transitions (unless maintainer+force).
   - `coding.*`: caller is assignee or maintainer AND task status ∈ `in_progress_statuses`.
-  - `planning.update_spec`: maintainers only.
+  - `planning_update_spec`: maintainers only.
   - Default deny for mutating ops if unauthorized.
 - Audit trail: append JSONL events to `/backlog/.audit.jsonl` with timestamp, caller, operation, context.
 - Secrets: rely on OS/git credential helpers; never store secrets in repo files.
@@ -374,7 +374,7 @@ interface Caller { type: "human" | "agent"; id: string; roles?: string[]; }
 
 ## 13. Performance & Scalability
 - Practical limits: ~10k tasks/board, task file ≤1 MB, spec ≤5 MB, diff for review ≤10 MB (truncate beyond).
-- Pagination: `kanban.get_board` supports `page`/`page_size`; response includes `{page,page_size,total_tasks,has_next}`.
+- Pagination: `kanban_get_board` supports `page`/`page_size`; response includes `{page,page_size,total_tasks,has_next}`.
 - Caching: config and rules cached; task/spec read per request to avoid stale data; index.json is an optimization only.
 
 ## 14. Observability, Testing & Migration
@@ -386,77 +386,77 @@ interface Caller { type: "human" | "agent"; id: string; roles?: string[]; }
 Types shown TypeScript-style; flesh out JSON Schema as follow-up.
 
 ### 15.1 Kanban & Tasks
-`kanban.get_board`
+`kanban_get_board`
 ```
 params: { status_filter?: string[]; assignee?: string; spec_id?: string; page?: number; page_size?: number; }
 returns: { columns: { id: string; name: string; tasks: TaskMeta[]; }[]; pagination?: { page; page_size; total_tasks; has_next; }; }
 errors: [CONFIG_INVALID, TASK_PARSE_ERROR]
 ```
 
-`tasks.get`
+`tasks_get`
 ```
 params: { task_id: string }
 returns: { meta: TaskMeta; sections: Record<string,string>; raw_path: string; }
 errors: [TASK_NOT_FOUND, TASK_PARSE_ERROR]
 ```
 
-`tasks.update`
+`tasks_update`
 ```
 params: { task_id: string; version: number; meta?: Partial<TaskMeta>; sections?: Record<string,string>; }
 returns: { success: true; meta: TaskMeta }
 errors: [TASK_NOT_FOUND, TASK_PARSE_ERROR, CONFLICT_DETECTED, TASK_LOCKED]
 ```
 
-`tasks.move`
+`tasks_move`
 ```
 params: { task_id: string; version: number; to_status: string; force?: boolean; }
 returns: { success: true; old_status: string; new_status: string; meta: TaskMeta; }
 errors: [TASK_NOT_FOUND, TASK_INVALID_STATUS, INVALID_TRANSITION, CONFLICT_DETECTED, TASK_LOCKED, DEPENDENCIES_NOT_MET]
 ```
 
-`tasks.search`
+`tasks_search`
 ```
 params: { query?: string; status?: string[]; assignee?: string; spec?: string; }
 returns: { results: { id; title; status; assignee?; spec?; }[]; }
 ```
 
 ### 15.2 Planning
-`planning.create_spec`
+`planning_create_spec`
 ```
 params: { feature_name: string; requirements_text?: string; requirements_path?: string; }
 returns: { spec_id: string; spec_path: string; summary: { title: string; goals: string[]; non_goals: string[]; }; }
 errors: [CONFIG_INVALID, TASK_PARSE_ERROR]
 ```
 
-`planning.breakdown_spec`
+`planning_breakdown_spec`
 ```
 params: { spec_path: string }
 returns: { spec_id: string; task_ids: string[]; summary: string; }
 errors: [SPEC_NOT_FOUND, TASK_PARSE_ERROR]
 ```
 
-`planning.update_spec`
+`planning_update_spec`
 ```
 params: { spec_path: string; version?: number; updated_content: string; }
 returns: { spec_id: string; changes_summary: string; }
 errors: [SPEC_NOT_FOUND, CONFLICT_DETECTED]
 ```
 
-`planning.rebuild_index`
+`planning_rebuild_index`
 ```
 params: {}
 returns: { success: true; index_path: string; }
 ```
 
 ### 15.3 Architecture
-`arch.validate_spec`
+`arch_validate_spec`
 ```
 params: { spec_path: string }
 returns: { spec_id: string; issues: { id; severity: "error"|"warning"|"info"; type: "layering_violation"|"pattern_violation"|"missing_component"|"ambiguous"; description: string; suggestion?: string; }[]; }
 errors: [SPEC_NOT_FOUND, RULE_PARSE_ERROR]
 ```
 
-`arch.annotate_spec_and_tasks`
+`arch_annotate_spec_and_tasks`
 ```
 params: { spec_path: string; report: any; }
 returns: { success: true }
@@ -464,7 +464,7 @@ errors: [SPEC_NOT_FOUND, TASK_PARSE_ERROR]
 ```
 
 ### 15.4 Coding
-`coding.start_task`
+`coding_start_task`
 ```
 params: { task_id: string }
 returns: {
@@ -478,14 +478,14 @@ returns: {
 errors: [TASK_NOT_FOUND, GATE_VIOLATION, SPEC_NOT_FOUND, UNAUTHORIZED]
 ```
 
-`coding.suggest_next_step`
+`coding_suggest_next_step`
 ```
 params: { task_id: string; current_diff_context?: string; }
 returns: { step: { description: string; estimated_complexity: "small"|"medium"|"large"; expected_files: string[]; }; }
 errors: [TASK_NOT_FOUND, GATE_VIOLATION]
 ```
 
-`coding.update_task_status`
+`coding_update_task_status`
 ```
 params: { task_id: string; version: number; status: string; notes?: string; }
 returns: { success: true; meta: TaskMeta }
@@ -493,7 +493,7 @@ errors: [INVALID_TRANSITION, GATE_VIOLATION, CONFLICT_DETECTED]
 ```
 
 ### 15.5 Review
-`review.analyze_diff`
+`review_analyze_diff`
 ```
 params: { base_ref: string; head_ref: string; task_id?: string; }
 returns: {
@@ -506,14 +506,14 @@ returns: {
 errors: [BRANCH_NOT_FOUND, ARCH_VIOLATION]
 ```
 
-`review.write_review_doc`
+`review_write_review_doc`
 ```
 params: { task_id: string; review: any; }
 returns: { success: true; review_path: string; }
 errors: [TASK_NOT_FOUND]
 ```
 
-`review.summarize_task_reviews`
+`review_summarize_task_reviews`
 ```
 params: { task_id: string }
 returns: {
@@ -526,34 +526,34 @@ errors: [TASK_NOT_FOUND]
 ```
 
 ### 15.6 Git
-`git.status`
+`git_status`
 ```
 params: {}
 returns: { branch: string; staged: string[]; unstaged: string[]; untracked: string[]; clean: boolean; }
 ```
 
-`git.create_branch`
+`git_create_branch`
 ```
 params: { branch_name: string; base_ref?: string; task_id?: string; }
 returns: { branch: string; base_ref: string; }
 errors: [BRANCH_NOT_FOUND]
 ```
 
-`git.stage_and_commit`
+`git_stage_and_commit`
 ```
 params: { task_id: string; summary: string; }
 returns: { commit_hash: string; message: string; }
 errors: [GIT_DIRTY, TASK_NOT_FOUND, MERGE_CONFLICT]
 ```
 
-`git.push`
+`git_push`
 ```
 params: { remote?: string; branch?: string; }
 returns: { success: true; remote: string; branch: string; }
 errors: [BRANCH_NOT_FOUND]
 ```
 
-`git.open_pr`
+`git_open_pr`
 ```
 params: { task_id: string; base_branch: string; title: string; body?: string; }
 returns: { pr_url: string; }

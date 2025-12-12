@@ -226,7 +226,7 @@ async function listMarkdownFiles(dir: string, pattern?: RegExp): Promise<string[
 }
 
 export const planningRebuildIndex = {
-  name: 'planning.rebuild_index',
+  name: 'planning_rebuild_index',
   handler: async () =>
     wrapWithErrorHandling(async () => {
       const result = await rebuildIndex(process.cwd());

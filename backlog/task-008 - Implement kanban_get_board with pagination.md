@@ -8,7 +8,7 @@ created: 2025-12-11T09:00:00Z
 updated: 2025-12-11T14:50:38Z
 schema_version: "3.0"
 ---
-# Implement kanban.get_board with pagination
+# Implement kanban_get_board with pagination
 
 ## Description
 Return a board grouped by status/columns with optional filters and pagination.

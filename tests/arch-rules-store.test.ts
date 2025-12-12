@@ -6,10 +6,8 @@ import {
   loadArchitectureRules,
   validateSpec,
   archValidateSpec,
-  ArchitectureRules,
 } from '../src/arch/rules-store.js';
 import { ErrorCode } from '../src/shared/errors.js';
-import { writeSpec } from '../src/specs/spec-store.js';
 
 async function writeRules(baseDir: string, yaml: string): Promise<string> {
   const dir = path.join(baseDir, 'architecture');

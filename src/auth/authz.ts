@@ -3,6 +3,20 @@ import { loadConfig, type KanbanConfig } from '../config/config-loader.js';
 import { Errors } from '../shared/errors.js';
 import type { TaskDocument } from '../backlog/task-store.js';
 import { appendAuditLog } from '../audit/audit-log.js';
+import { logger } from '../observability/logger.js';
+
+/**
+ * Environment variable keys checked for caller identification (in priority order).
+ * Set SDD_CALLER_ID or MCP_CALLER_ID to avoid passing caller_id on every call.
+ */
+const ENV_CALLER_ID_KEYS = ['SDD_CALLER_ID', 'MCP_CALLER_ID'] as const;
+
+/**
+ * Environment variable to enable trust-local mode.
+ * When SDD_TRUST_LOCAL=true, operations without a caller_id will use the first
+ * maintainer from config, enabling frictionless local development.
+ */
+const TRUST_LOCAL_ENV = 'SDD_TRUST_LOCAL';
 
 export type CallerType = 'human' | 'agent';
 
@@ -18,8 +32,31 @@ export interface AuthContext {
   caller?: Caller;
 }
 
+/**
+ * Resolve caller ID from context, environment variables, or return undefined.
+ * Priority: ctx.caller.id > ctx.callerId > SDD_CALLER_ID > MCP_CALLER_ID
+ */
 function resolveCallerId(ctx: AuthContext): string | undefined {
-  return ctx.caller?.id ?? ctx.callerId;
+  // 1. Explicit caller in context takes priority
+  if (ctx.caller?.id) return ctx.caller.id;
+  if (ctx.callerId) return ctx.callerId;
+
+  // 2. Environment variable fallback
+  for (const key of ENV_CALLER_ID_KEYS) {
+    const value = process.env[key];
+    if (value && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Check if trust-local mode is enabled via environment variable.
+ */
+function isTrustLocalEnabled(): boolean {
+  return process.env[TRUST_LOCAL_ENV] === 'true';
 }
 
 function isMaintainer(config: KanbanConfig, callerId: string | undefined): boolean {
@@ -36,6 +73,9 @@ function isAssignee(task: TaskDocument, callerId: string | undefined): boolean {
 /**
  * Ensure the caller is permitted to mutate the given task (assignee or maintainer).
  * Throws UNAUTHORIZED when the caller is missing or lacks rights.
+ *
+ * In trust-local mode (SDD_TRUST_LOCAL=true), if no caller is identified,
+ * uses the first maintainer from config for frictionless local development.
  */
 export function assertTaskMutationAllowed(
   task: TaskDocument,
@@ -43,11 +83,32 @@ export function assertTaskMutationAllowed(
   ctx: AuthContext,
   operation: string,
 ): void {
-  const callerId = resolveCallerId(ctx) ?? 'unknown';
-  const allowed = isMaintainer(config, callerId) || isAssignee(task, callerId);
+  let callerId = resolveCallerId(ctx);
+
+  // Trust-local mode: use first maintainer if no caller identified
+  if (!callerId && isTrustLocalEnabled()) {
+    const firstMaintainer = config.roles?.maintainers?.[0];
+    if (firstMaintainer) {
+      callerId = firstMaintainer;
+      logger.debug({ callerId, operation }, 'Trust-local mode: using first maintainer');
+    }
+  }
+
+  // Default to 'unknown' for error reporting
+  const effectiveCallerId = callerId ?? 'unknown';
+  const allowed = isMaintainer(config, effectiveCallerId) || isAssignee(task, effectiveCallerId);
 
   if (!allowed) {
-    throw Errors.unauthorized(callerId, operation);
+    // Debug logging to help troubleshoot auth failures
+    logger.debug({
+      callerId: effectiveCallerId,
+      taskId: task.meta.id,
+      taskAssignee: task.meta.assignee,
+      maintainers: config.roles?.maintainers ?? [],
+      operation,
+    }, 'Authorization check failed');
+
+    throw Errors.unauthorized(effectiveCallerId, operation);
   }
 }
 
@@ -71,15 +132,33 @@ export function assertCodingAllowed(
 
 /**
  * Maintain access check for maintainer-only operations.
+ * Supports trust-local mode for frictionless local development.
  */
 export function assertMaintainer(
   config: KanbanConfig,
   ctx: AuthContext,
   operation: string,
 ): void {
-  const callerId = resolveCallerId(ctx) ?? 'unknown';
-  if (!isMaintainer(config, callerId)) {
-    throw Errors.unauthorized(callerId, operation);
+  let callerId = resolveCallerId(ctx);
+
+  // Trust-local mode: use first maintainer if no caller identified
+  if (!callerId && isTrustLocalEnabled()) {
+    const firstMaintainer = config.roles?.maintainers?.[0];
+    if (firstMaintainer) {
+      callerId = firstMaintainer;
+      logger.debug({ callerId, operation }, 'Trust-local mode: using first maintainer');
+    }
+  }
+
+  const effectiveCallerId = callerId ?? 'unknown';
+  if (!isMaintainer(config, effectiveCallerId)) {
+    logger.debug({
+      callerId: effectiveCallerId,
+      maintainers: config.roles?.maintainers ?? [],
+      operation,
+    }, 'Maintainer check failed');
+
+    throw Errors.unauthorized(effectiveCallerId, operation);
   }
 }
 

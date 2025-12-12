@@ -8,10 +8,10 @@ created: 2025-12-11T09:00:00Z
 updated: 2025-12-11T15:30:00Z
 schema_version: "3.0"
 ---
-# Implement planning.breakdown_spec tool
+# Implement planning_breakdown_spec tool
 
 ## Description
-Implement MCP tool `planning.breakdown_spec` to generate task stubs from a spec, writing `/backlog/task-*.md` linked to the spec and updating index.json.
+Implement MCP tool `planning_breakdown_spec` to generate task stubs from a spec, writing `/backlog/task-*.md` linked to the spec and updating index.json.
 
 ## Acceptance Criteria
 - [x] Reads spec via spec-store; errors with SPEC_NOT_FOUND when missing.

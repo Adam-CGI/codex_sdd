@@ -5,8 +5,10 @@ describe('Tool Registry', () => {
   it('should have placeholder tools registered', () => {
     const tools = getRegisteredTools();
     expect(tools.length).toBeGreaterThan(0);
-    expect(tools).toContain('tasks.get');
-    expect(tools).toContain('kanban.get_board');
+    // Tool names use underscores per MCP naming convention
+    const toolNames = tools.map((t) => t.name);
+    expect(toolNames).toContain('tasks_get');
+    expect(toolNames).toContain('kanban_get_board');
   });
 
   it('should allow registering a new tool', () => {

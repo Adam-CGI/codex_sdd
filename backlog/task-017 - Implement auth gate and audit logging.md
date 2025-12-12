@@ -14,7 +14,7 @@ schema_version: "3.0"
 Implement Caller-based authorization and Kanban gate checks, plus append-only audit log `/backlog/.audit.jsonl` for mutating operations.
 
 ## Acceptance Criteria
-- [x] `auth/authz.ts` enforces: maintainer/assignee rights, coding.* gate on in_progress_statuses, planning.update_spec maintainers only.
+- [x] `auth/authz.ts` enforces: maintainer/assignee rights, coding.* gate on in_progress_statuses, planning_update_spec maintainers only.
 - [x] Gate violations return GATE_VIOLATION with current status in details.
 - [x] Audit log appends JSONL entries (timestamp, caller, operation, context) for mutating tools; file is created if missing.
 - [x] Unit tests cover allowed/denied combinations and audit append.

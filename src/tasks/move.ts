@@ -10,7 +10,7 @@ interface MoveParams {
 }
 
 export const tasksMove = {
-  name: 'tasks.move',
+  name: 'tasks_move',
   handler: async (params: MoveParams) =>
     wrapWithErrorHandling(() =>
       moveTask(

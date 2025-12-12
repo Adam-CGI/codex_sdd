@@ -7,7 +7,7 @@ interface StartTaskParams {
 }
 
 export const codingStartTask = {
-  name: 'coding.start_task',
+  name: 'coding_start_task',
   handler: async (params: StartTaskParams) =>
     wrapWithErrorHandling(() =>
       startTask(params.task_id, { callerId: params.caller_id }),

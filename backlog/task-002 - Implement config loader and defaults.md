@@ -26,4 +26,4 @@ Build `config/config-loader.ts` that reads `/backlog/config.yaml`, validates sch
 
 ## Links
 - Spec: docs/mcp-kanban-sdd.md#4-config--status-model
-- Related: task-017 (auth/gate), task-007 (tasks.move)
+- Related: task-017 (auth/gate), task-007 (tasks_move)

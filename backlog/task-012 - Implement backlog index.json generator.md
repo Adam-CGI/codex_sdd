@@ -14,9 +14,9 @@ schema_version: "3.0"
 Generate /backlog/index.json mapping specs to tasks and tasks to basic metadata.
 
 ## Acceptance Criteria
-- [x] `planning.rebuild_index` tool reads tasks/specs and writes index.json per schema (version, schema_version, generated_at, features[], tasks{}).
+- [x] `planning_rebuild_index` tool reads tasks/specs and writes index.json per schema (version, schema_version, generated_at, features[], tasks{}).
 - [x] Handles stale detection (if task/spec newer than generated_at) and exposes flag/result.
-- [x] Runs after planning.breakdown_spec and when task spec link changes.
+- [x] Runs after planning_breakdown_spec and when task spec link changes.
 - [x] Unit tests cover empty repo, tasks-only, specs-only, combined, and stale detection.
 
 ## Implementation Notes

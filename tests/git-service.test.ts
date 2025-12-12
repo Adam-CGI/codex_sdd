@@ -194,6 +194,38 @@ describe('createBranch', () => {
 
     expect(result.branch).toBe('feature/task-001');
   });
+
+  it('honors dry_run without creating branch', async () => {
+    await initGitRepo();
+    const git = simpleGit(tmpDir);
+
+    const result = await createBranch(
+      { branch_name: 'feature/dry-run', dry_run: true },
+      { baseDir: tmpDir }
+    );
+
+    expect(result.branch).toBe('feature/dry-run');
+    const branches = await git.branch();
+    expect(branches.all).not.toContain('feature/dry-run');
+  });
+
+  it('blocks protected branches unless allowed', async () => {
+    await initGitRepo();
+
+    await expect(
+      createBranch(
+        { branch_name: 'main', protected_branches: ['main'] },
+        { baseDir: tmpDir }
+      )
+    ).rejects.toHaveProperty('code', ErrorCode.BRANCH_NOT_FOUND);
+
+    const result = await createBranch(
+      { branch_name: 'main', protected_branches: ['main'], allow_protected: true },
+      { baseDir: tmpDir }
+    );
+
+    expect(result.branch).toBe('main');
+  });
 });
 
 describe('stageAndCommit', () => {

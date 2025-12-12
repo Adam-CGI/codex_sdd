@@ -24,6 +24,9 @@ export interface CreateBranchParams {
   branch_name: string;
   base_ref?: string;
   task_id?: string;
+  dry_run?: boolean;
+  protected_branches?: string[];
+  allow_protected?: boolean;
 }
 
 export interface CreateBranchResult {
@@ -92,11 +95,25 @@ export async function createBranch(
   const { branch_name, base_ref, task_id } = params;
   const actualBaseRef = base_ref ?? 'HEAD';
 
+  const protectedList =
+    (params.protected_branches && params.protected_branches.length > 0
+      ? params.protected_branches
+      : ['main', 'master', 'trunk', 'develop']);
+  const isProtectedTarget = protectedList.includes(branch_name);
+
+  if (isProtectedTarget && !params.allow_protected) {
+    throw new McpError(
+      ErrorCode.BRANCH_NOT_FOUND,
+      `Branch "${branch_name}" is protected. Pass allow_protected=true to override.`,
+      { branch: branch_name }
+    );
+  }
+
   // Verify base ref exists if specified
   if (base_ref) {
     try {
       await git.revparse([base_ref]);
-    } catch (error) {
+    } catch {
       throw Errors.branchNotFound(base_ref);
     }
   }
@@ -111,6 +128,13 @@ export async function createBranch(
       }
       throw error;
     }
+  }
+
+  if (params.dry_run) {
+    return {
+      branch: branch_name,
+      base_ref: actualBaseRef,
+    };
   }
 
   // Create the branch
@@ -209,7 +233,7 @@ export async function push(
   // Verify branch exists locally
   try {
     await git.revparse([branch]);
-  } catch (error) {
+  } catch {
     throw Errors.branchNotFound(branch);
   }
 

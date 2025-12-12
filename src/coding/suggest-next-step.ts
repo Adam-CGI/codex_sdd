@@ -8,7 +8,7 @@ interface SuggestNextStepParams {
 }
 
 export const codingSuggestNextStep = {
-  name: 'coding.suggest_next_step',
+  name: 'coding_suggest_next_step',
   handler: async (params: SuggestNextStepParams) =>
     wrapWithErrorHandling(() =>
       suggestNextStep(params.task_id, params.current_diff_context, { callerId: params.caller_id }),

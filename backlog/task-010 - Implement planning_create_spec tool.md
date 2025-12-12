@@ -8,10 +8,10 @@ created: 2025-12-11T09:00:00Z
 updated: 2025-12-11T15:08:00Z
 schema_version: "3.0"
 ---
-# Implement planning.create_spec tool
+# Implement planning_create_spec tool
 
 ## Description
-Expose MCP tool `planning.create_spec` to create a new feature spec file (id = slugified name), with initial sections/goals and optional requirements text or file input.
+Expose MCP tool `planning_create_spec` to create a new feature spec file (id = slugified name), with initial sections/goals and optional requirements text or file input.
 
 ## Acceptance Criteria
 - [x] Generates spec path under `/specs` with frontmatter (id, status=Planned, schema_version).
