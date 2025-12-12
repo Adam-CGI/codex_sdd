@@ -317,7 +317,7 @@ Full schemas in Appendix A; handlers live in `src/*-service.ts`.
 
 ## 8. User Workflows (Human + Agent)
 ### 8.1 Workflow A – New Feature to Done
-Requester describes feature → agent `planning_create_spec` → agent `planning_breakdown_spec` → maintainer refines tasks → maintainer moves to Ready → assignee moves to In Progress → agent coding loop (`coding.*`, `git.*`) → agent sets In Review → maintainer `review.*` → maintainer merges PR & `tasks_move` to Done → optional `planning_update_spec` status.
+Requester describes feature → agent `planning_create_spec` → agent `planning_breakdown_spec` → maintainer refines tasks → maintainer moves to Ready → developer moves to In Progress (assignee optional) → agent coding loop (`coding.*`, `git.*`) → agent sets In Review → maintainer `review.*` → maintainer merges PR & `tasks_move` to Done → optional `planning_update_spec` status.
 
 ### 8.2 Workflow B – Human Developer Only
 Same planning/Kanban; human performs coding and git manually or via git tools; still leverages `review.*`.
@@ -364,10 +364,10 @@ Out of scope: rebases, cherry-picks, submodules, complex merges. Git kept tightl
 interface Caller { type: "human" | "agent"; id: string; roles?: string[]; }
 ```
 - Authorization rules:
-  - `tasks_move`: assignee or maintainer, obey transitions (unless maintainer+force).
-  - `coding.*`: caller is assignee or maintainer AND task status ∈ `in_progress_statuses`.
+  - `tasks_move`: assignee gate removed; any caller may move tasks (transitions still enforced; maintainer+force can bypass transitions/deps).
+  - `coding.*`: requires task status ∈ `in_progress_statuses`; caller identity not restricted.
   - `planning_update_spec`: maintainers only.
-  - Default deny for mutating ops if unauthorized.
+  - Other mutating ops rely on optimistic locking; pass `caller_id` for audit when possible.
 - Audit trail: append JSONL events to `/backlog/.audit.jsonl` with timestamp, caller, operation, context.
 - Secrets: rely on OS/git credential helpers; never store secrets in repo files.
 - Rate limiting: optional per-caller quotas (e.g., 100 ops/min/agent) → `RATE_LIMIT_EXCEEDED`.

@@ -65,17 +65,13 @@ function isMaintainer(config: KanbanConfig, callerId: string | undefined): boole
   return maintainers.includes(callerId);
 }
 
-function isAssignee(task: TaskDocument, callerId: string | undefined): boolean {
-  if (!callerId) return false;
-  return task.meta.assignee === callerId;
-}
-
 /**
- * Ensure the caller is permitted to mutate the given task (assignee or maintainer).
- * Throws UNAUTHORIZED when the caller is missing or lacks rights.
+ * Task mutation guard.
+ * Assignee enforcement has been removed for lower friction; any caller may mutate tasks.
+ * We still resolve a caller ID for auditing and potential future policy toggles.
  *
  * In trust-local mode (SDD_TRUST_LOCAL=true), if no caller is identified,
- * uses the first maintainer from config for frictionless local development.
+ * uses the first maintainer from config for better audit labeling.
  */
 export function assertTaskMutationAllowed(
   task: TaskDocument,
@@ -85,7 +81,7 @@ export function assertTaskMutationAllowed(
 ): void {
   let callerId = resolveCallerId(ctx);
 
-  // Trust-local mode: use first maintainer if no caller identified
+  // Trust-local mode: use first maintainer if no caller identified (for better audit labels)
   if (!callerId && isTrustLocalEnabled()) {
     const firstMaintainer = config.roles?.maintainers?.[0];
     if (firstMaintainer) {
@@ -94,26 +90,21 @@ export function assertTaskMutationAllowed(
     }
   }
 
-  // Default to 'unknown' for error reporting
   const effectiveCallerId = callerId ?? 'unknown';
-  const allowed = isMaintainer(config, effectiveCallerId) || isAssignee(task, effectiveCallerId);
 
-  if (!allowed) {
-    // Debug logging to help troubleshoot auth failures
-    logger.debug({
-      callerId: effectiveCallerId,
-      taskId: task.meta.id,
-      taskAssignee: task.meta.assignee,
-      maintainers: config.roles?.maintainers ?? [],
-      operation,
-    }, 'Authorization check failed');
-
-    throw Errors.unauthorized(effectiveCallerId, operation);
-  }
+  // Assignee-based authorization was intentionally removed to reduce friction.
+  // We keep this hook for auditing and future policy toggles.
+  logger.debug({
+    callerId: effectiveCallerId,
+    taskId: task.meta.id,
+    taskAssignee: task.meta.assignee,
+    operation,
+  }, 'Assignee gate disabled: allowing task mutation');
 }
 
 /**
- * Gate for coding.* operations: caller must be assignee or maintainer AND task in in_progress_statuses.
+ * Gate for coding.* operations: task must be in one of config.in_progress_statuses.
+ * Caller identity is not restricted (assignee check removed).
  */
 export function assertCodingAllowed(
   task: TaskDocument,

@@ -47,15 +47,16 @@ ${extraMeta}---
 }
 
 describe('authz + audit', () => {
-  it('denies moveTask when caller is neither maintainer nor assignee', async () => {
+  it('allows moveTask even when caller is not the assignee', async () => {
     await writeTask('task-noauth', 'assignee: human:bob\n');
 
-    await expect(
-      moveTask(
-        { taskId: 'task-noauth', version: 1, toStatus: 'Ready' },
-        { baseDir: tmpDir, callerId: 'human:eve' },
-      ),
-    ).rejects.toMatchObject({ code: ErrorCode.UNAUTHORIZED });
+    const result = await moveTask(
+      { taskId: 'task-noauth', version: 1, toStatus: 'Ready' },
+      { baseDir: tmpDir, callerId: 'human:eve' },
+    );
+
+    expect(result.meta.status).toBe('Ready');
+    expect(result.meta.version).toBe(2);
   });
 
   it('appends audit entry on successful moveTask', async () => {

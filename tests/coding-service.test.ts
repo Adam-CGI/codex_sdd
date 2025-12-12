@@ -120,7 +120,7 @@ Create REST API endpoint for user login.
       expect(result.relevant_files).toContain('src/auth/register.ts');
     });
 
-    it('should reject when caller is not assignee or maintainer', async () => {
+    it('allows startTask when caller is not the assignee', async () => {
       const spec = `---
 id: feature-restricted
 schema_version: "3.0"
@@ -141,11 +141,10 @@ schema_version: "3.0"
 `;
       await fs.writeFile(path.join(tmpDir, 'backlog', 'task-unauth - Task restricted.md'), task, 'utf8');
 
-      await expect(
-        startTask('task-unauth', { baseDir: tmpDir, callerId: 'user:eve' }),
-      ).rejects.toMatchObject({
-        code: ErrorCode.UNAUTHORIZED,
-      });
+      const result = await startTask('task-unauth', { baseDir: tmpDir, callerId: 'user:eve' });
+
+      expect(result.task.meta.id).toBe('task-unauth');
+      expect(result.task.meta.status).toBe('In Progress');
     });
 
     it('should throw GATE_VIOLATION if task is not in in_progress_statuses', async () => {
